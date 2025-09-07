@@ -1,0 +1,339 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { MainLayout } from '@/components/layout/main-layout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { 
+  Calendar as CalendarIcon, 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus,
+  Clock,
+  Users,
+  Building2
+} from 'lucide-react'
+import { Room, Booking } from '@/types'
+import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay, isSameWeek, isSameMonth } from 'date-fns'
+import { he } from 'date-fns/locale'
+import { CalendarDayView } from '@/components/calendar/calendar-day-view'
+import { CalendarWeekView } from '@/components/calendar/calendar-week-view'
+import { CalendarMonthView } from '@/components/calendar/calendar-month-view'
+import { BookingDialog } from '@/components/booking/booking-dialog'
+
+export default function CalendarPage() {
+  const searchParams = useSearchParams()
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [view, setView] = useState<'day' | 'week' | 'month'>('week')
+  const [selectedRoom, setSelectedRoom] = useState<string>('all')
+  const [showBookingDialog, setShowBookingDialog] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch rooms
+        const { data: roomsData } = await supabase
+          .from('rooms')
+          .select('*')
+          .eq('bookable', true)
+          .order('name')
+
+        setRooms(roomsData || [])
+
+        // Fetch bookings for the current period
+        await fetchBookings()
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [supabase])
+
+  useEffect(() => {
+    // Check for room parameter in URL
+    const roomParam = searchParams.get('room')
+    if (roomParam && roomParam !== 'all') {
+      setSelectedRoom(roomParam)
+      setSelectedRoomId(roomParam)
+    }
+  }, [searchParams])
+
+  const fetchBookings = async () => {
+    try {
+      let startDate: Date
+      let endDate: Date
+
+      switch (view) {
+        case 'day':
+          startDate = new Date(currentDate)
+          endDate = addDays(currentDate, 1)
+          break
+        case 'week':
+          startDate = startOfWeek(currentDate, { weekStartsOn: 0 })
+          endDate = endOfWeek(currentDate, { weekStartsOn: 0 })
+          break
+        case 'month':
+          startDate = startOfMonth(currentDate)
+          endDate = endOfMonth(currentDate)
+          break
+        default:
+          startDate = startOfWeek(currentDate, { weekStartsOn: 0 })
+          endDate = endOfWeek(currentDate, { weekStartsOn: 0 })
+      }
+
+      const { data: bookingsData } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          room:rooms(*),
+          user:profiles(*)
+        `)
+        .gte('start_time', startDate.toISOString())
+        .lte('start_time', endDate.toISOString())
+        .eq('status', 'approved')
+        .order('start_time')
+
+      setBookings(bookingsData || [])
+    } catch (error) {
+      console.error('Error fetching bookings:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchBookings()
+  }, [currentDate, view, selectedRoom, supabase])
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    let newDate: Date
+
+    switch (view) {
+      case 'day':
+        newDate = direction === 'prev' ? subDays(currentDate, 1) : addDays(currentDate, 1)
+        break
+      case 'week':
+        newDate = direction === 'prev' ? subDays(currentDate, 7) : addDays(currentDate, 7)
+        break
+      case 'month':
+        newDate = direction === 'prev' ? subDays(currentDate, 30) : addDays(currentDate, 30)
+        break
+      default:
+        newDate = direction === 'prev' ? subDays(currentDate, 7) : addDays(currentDate, 7)
+    }
+
+    setCurrentDate(newDate)
+  }
+
+  const goToToday = () => {
+    setCurrentDate(new Date())
+  }
+
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date)
+    setShowBookingDialog(true)
+  }
+
+  const handleRoomClick = (roomId: string) => {
+    setSelectedRoomId(roomId)
+    setShowBookingDialog(true)
+  }
+
+  const filteredBookings = selectedRoom === 'all' 
+    ? bookings 
+    : bookings.filter(booking => booking.room_id === selectedRoom)
+
+  const getDateRangeText = () => {
+    switch (view) {
+      case 'day':
+        return format(currentDate, 'dd/MM/yyyy', { locale: he })
+      case 'week':
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
+        const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
+        return `${format(weekStart, 'dd/MM', { locale: he })} - ${format(weekEnd, 'dd/MM/yyyy', { locale: he })}`
+      case 'month':
+        return format(currentDate, 'MMMM yyyy', { locale: he })
+      default:
+        return format(currentDate, 'dd/MM/yyyy', { locale: he })
+    }
+  }
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  return (
+    <MainLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">לוח שנה</h1>
+            <p className="mt-2 text-gray-600">
+              ניהול הזמנות חללי עבודה
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setShowBookingDialog(true)}>
+              <Plus className="h-4 w-4 ml-2" />
+              הזמנה חדשה
+            </Button>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Date Navigation */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateDate('prev')}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToToday}
+                  className="min-w-[100px]"
+                >
+                  היום
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateDate('next')}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Date Display */}
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4 text-gray-400" />
+                <span className="font-medium">{getDateRangeText()}</span>
+              </div>
+
+              {/* View Toggle */}
+              <Tabs value={view} onValueChange={(value) => setView(value as 'day' | 'week' | 'month')}>
+                <TabsList>
+                  <TabsTrigger value="day">יום</TabsTrigger>
+                  <TabsTrigger value="week">שבוע</TabsTrigger>
+                  <TabsTrigger value="month">חודש</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              {/* Room Filter */}
+              <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="בחר חלל" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">כל החללים</SelectItem>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Calendar Views */}
+        <Card>
+          <CardContent className="p-0">
+            {view === 'day' && (
+              <CalendarDayView
+                date={currentDate}
+                rooms={rooms}
+                bookings={filteredBookings}
+                onDateClick={handleDateClick}
+                onRoomClick={handleRoomClick}
+              />
+            )}
+            
+            {view === 'week' && (
+              <CalendarWeekView
+                date={currentDate}
+                rooms={rooms}
+                bookings={filteredBookings}
+                onDateClick={handleDateClick}
+                onRoomClick={handleRoomClick}
+              />
+            )}
+            
+            {view === 'month' && (
+              <CalendarMonthView
+                date={currentDate}
+                rooms={rooms}
+                bookings={filteredBookings}
+                onDateClick={handleDateClick}
+                onRoomClick={handleRoomClick}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Booking Dialog */}
+        <BookingDialog
+          open={showBookingDialog}
+          onClose={() => {
+            setShowBookingDialog(false)
+            setSelectedDate(null)
+            setSelectedRoomId(null)
+          }}
+          defaultDate={selectedDate}
+          defaultRoom={selectedRoomId}
+          onSubmit={async (bookingData) => {
+            try {
+              const { data: { user } } = await supabase.auth.getUser()
+              if (!user) return
+
+              const { error } = await supabase
+                .from('bookings')
+                .insert({
+                  ...bookingData,
+                  user_id: user.id,
+                  status: rooms.find(r => r.id === bookingData.room_id)?.requires_approval ? 'pending' : 'approved'
+                })
+
+              if (error) throw error
+
+              await fetchBookings()
+              setShowBookingDialog(false)
+              setSelectedDate(null)
+              setSelectedRoomId(null)
+            } catch (error: any) {
+              console.error('Error creating booking:', error)
+            }
+          }}
+        />
+      </div>
+    </MainLayout>
+  )
+}
