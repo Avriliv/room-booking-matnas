@@ -137,7 +137,7 @@ export function RoomFormDialog({ open, onClose, room, onSave }: RoomFormDialogPr
       }
 
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving room:', error)
       toast.error(error.message || 'שגיאה בשמירת החלל')
     } finally {

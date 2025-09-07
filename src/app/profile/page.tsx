@@ -93,7 +93,7 @@ export default function ProfilePage() {
       } : null)
 
       toast.success('הפרופיל עודכן בהצלחה')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'אירעה שגיאה בעדכון הפרופיל')
     } finally {
       setSaving(false)
@@ -123,7 +123,7 @@ export default function ProfilePage() {
       })
 
       toast.success('הסיסמה שונתה בהצלחה')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'אירעה שגיאה בשינוי הסיסמה')
     } finally {
       setChangingPassword(false)

@@ -67,7 +67,7 @@ export default function AdminSettingsPage() {
       await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
       
       toast.success('הגדרות נשמרו בהצלחה')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'שגיאה בשמירת ההגדרות')
     } finally {
       setSaving(false)

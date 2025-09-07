@@ -24,8 +24,8 @@
 ### Environment Variables:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://tvphtqxmcnjrccnukcqp.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=[העתק מה-Supabase]
-SUPABASE_SERVICE_ROLE_KEY=[העתק מה-Supabase - סודי!]
+NEXT_PUBLIC_SUPABASE_ANON_KEY=[eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2cGh0cXhtY25qcmNjbnVrY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyMjY3NDUsImV4cCI6MjA3MjgwMjc0NX0.RDpY_3NOMd9bw79TZ3mKzQ3g1SHqWpqZ9KsiS6zkbvk]
+SUPABASE_SERVICE_ROLE_KEY=[eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2cGh0cXhtY25qcmNjbnVrY3FwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzIyNjc0NSwiZXhwIjoyMDcyODAyNzQ1fQ.FFbRxKgeyOjneqVNxEykHlko_NOTi2ypEYtPFN7EMLA]
 NEXT_PUBLIC_APP_URL=https://your-app-name.vercel.app
 NEXT_PUBLIC_APP_NAME=המחלקה לחינוך בלתי פורמלי - מטה אשר
 ```

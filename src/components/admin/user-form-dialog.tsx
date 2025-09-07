@@ -133,7 +133,7 @@ export function UserFormDialog({ open, onClose, user, onSave }: UserFormDialogPr
       }
 
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving user:', error)
       toast.error(error.message || 'שגיאה בשמירת המשתמש')
     } finally {

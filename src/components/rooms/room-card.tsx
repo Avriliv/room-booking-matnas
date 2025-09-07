@@ -10,7 +10,7 @@ import { Room } from '@/types'
 interface RoomCardProps {
   room: Room
   availability: 'available' | 'busy' | 'blocked'
-  currentBooking?: any
+  currentBooking?: Record<string, unknown>
   onBook?: () => void
   onView?: () => void
 }

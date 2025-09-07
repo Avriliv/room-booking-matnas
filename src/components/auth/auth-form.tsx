@@ -41,7 +41,7 @@ export function AuthForm() {
         if (error) throw error
         toast.success('התחברת בהצלחה!')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'אירעה שגיאה')
     } finally {
       setIsLoading(false)

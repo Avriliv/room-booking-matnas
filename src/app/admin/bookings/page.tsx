@@ -47,7 +47,7 @@ export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [roomFilter, setRoomFilter] = useState('all')
-  const [rooms, setRooms] = useState<any[]>([])
+  const [rooms, setRooms] = useState<Room[]>([])
   const supabase = createClientComponentClient()
 
   useEffect(() => {
@@ -98,13 +98,13 @@ export default function AdminBookingsPage() {
       setBookings(prev => 
         prev.map(booking => 
           booking.id === bookingId 
-            ? { ...booking, status: newStatus as any, updated_at: new Date().toISOString() }
+            ? { ...booking, status: newStatus as 'pending' | 'approved' | 'rejected' | 'cancelled', updated_at: new Date().toISOString() }
             : booking
         )
       )
 
       toast.success('סטטוס ההזמנה עודכן בהצלחה')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'שגיאה בעדכון סטטוס ההזמנה')
     }
   }
@@ -122,7 +122,7 @@ export default function AdminBookingsPage() {
 
       setBookings(prev => prev.filter(booking => booking.id !== bookingId))
       toast.success('הזמנה נמחקה בהצלחה')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'שגיאה במחיקת ההזמנה')
     }
   }

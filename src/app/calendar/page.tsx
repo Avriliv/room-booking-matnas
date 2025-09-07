@@ -330,7 +330,7 @@ export default function CalendarPage() {
               setShowBookingDialog(false)
               setSelectedDate(null)
               setSelectedRoomId(null)
-            } catch (error: any) {
+            } catch (error: unknown) {
               console.error('Error creating booking:', error)
             }
           }}

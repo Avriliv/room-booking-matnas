@@ -51,7 +51,7 @@ export default function AdminApprovalsPage() {
 
       setPendingBookings(bookingsData || [])
     } catch (error) {
-      console.error('Error fetching pending bookings:', error)
+      console.error('Error fetching pending bookings:', error instanceof Error ? error.message : 'Unknown error')
       toast.error('שגיאה בטעינת ההזמנות הממתינות')
     } finally {
       setLoading(false)
@@ -80,7 +80,7 @@ export default function AdminApprovalsPage() {
       
       // TODO: Send email notification to user
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error approving booking:', error)
       toast.error(error.message || 'שגיאה באישור ההזמנה')
     } finally {
@@ -117,9 +117,9 @@ export default function AdminApprovalsPage() {
       
       // TODO: Send email notification to user
       
-    } catch (error: any) {
-      console.error('Error rejecting booking:', error)
-      toast.error(error.message || 'שגיאה בדחיית ההזמנה')
+    } catch (error: unknown) {
+      console.error('Error rejecting booking:', error instanceof Error ? error.message : 'Unknown error')
+      toast.error(error instanceof Error ? error.message : 'שגיאה בדחיית ההזמנה')
     } finally {
       setProcessing(null)
     }

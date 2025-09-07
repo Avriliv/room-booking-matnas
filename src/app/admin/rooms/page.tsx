@@ -86,7 +86,7 @@ export default function AdminRoomsPage() {
       )
 
       toast.success(`חלל ${!currentStatus ? 'הופעל' : 'הושבת'} בהצלחה`)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'שגיאה בעדכון סטטוס החלל')
     }
   }
@@ -104,7 +104,7 @@ export default function AdminRoomsPage() {
 
       setRooms(prev => prev.filter(room => room.id !== roomId))
       toast.success('חלל נמחק בהצלחה')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'שגיאה במחיקת החלל')
     }
   }

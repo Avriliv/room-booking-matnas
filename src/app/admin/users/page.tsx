@@ -85,7 +85,7 @@ export default function AdminUsersPage() {
       )
 
       toast.success(`משתמש ${!currentStatus ? 'הופעל' : 'הושבת'} בהצלחה`)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'שגיאה בעדכון סטטוס המשתמש')
     }
   }
@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
 
       setUsers(prev => prev.filter(user => user.id !== userId))
       toast.success('משתמש נמחק בהצלחה')
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'שגיאה במחיקת המשתמש')
     }
   }
