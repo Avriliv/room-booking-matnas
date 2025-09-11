@@ -15,6 +15,9 @@ import { toast } from 'sonner'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [jobTitle, setJobTitle] = useState('')
+  const [phone, setPhone] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -38,7 +41,12 @@ export default function LoginPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              display_name: displayName,
+              job_title: jobTitle,
+              phone: phone
+            }
           }
         })
 
@@ -50,6 +58,25 @@ export default function LoginPage() {
         if (data.user && !data.user.email_confirmed_at) {
           toast.success('נשלח אימייל לאישור החשבון. אנא בדוק את תיבת הדואר שלך.')
         } else {
+          // Create profile after successful signup
+          if (data.user) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                display_name: displayName,
+                email: email,
+                job_title: jobTitle,
+                phone: phone,
+                role: 'user',
+                active: true
+              })
+
+            if (profileError) {
+              console.error('Error creating profile:', profileError)
+            }
+          }
+          
           toast.success('הרשמה הושלמה בהצלחה!')
           router.push('/dashboard')
         }
@@ -110,6 +137,20 @@ export default function LoginPage() {
                 </Alert>
               )}
 
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">שם מלא</Label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="הזן את שמך המלא"
+                    required
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">כתובת אימייל</Label>
                 <div className="relative">
@@ -125,6 +166,33 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
+
+              {isSignUp && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="jobTitle">תפקיד</Label>
+                    <Input
+                      id="jobTitle"
+                      type="text"
+                      value={jobTitle}
+                      onChange={(e) => setJobTitle(e.target.value)}
+                      placeholder="הזן את התפקיד שלך"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">טלפון</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="הזן מספר טלפון"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="password">סיסמה</Label>

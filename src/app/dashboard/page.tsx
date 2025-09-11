@@ -218,9 +218,19 @@ export default function Dashboard() {
         {/* Welcome Message */}
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
           <h2 className="text-2xl font-bold mb-2">
-            שלום {user?.display_name || 'משתמש'}!
+            {(() => {
+              const hour = new Date().getHours()
+              if (hour < 12) return 'בוקר טוב'
+              if (hour < 17) return 'צהריים טובים'
+              return 'ערב טוב'
+            })()}, {user?.display_name || 'משתמש'}! 👋
           </h2>
           <p className="text-blue-100">
+            {user?.job_title && (
+              <span className="block text-sm mb-2">
+                {user.job_title}
+              </span>
+            )}
             {user?.role === 'admin' && 'ברוכים הבאים לפאנל הניהול. כאן תוכלו לנהל את כל המערכת.'}
             {user?.role === 'editor' && 'ברוכים הבאים לפאנל העריכה. כאן תוכלו לנהל הזמנות ולאשר בקשות.'}
             {user?.role === 'user' && 'ברוכים הבאים למערכת ההזמנות. כאן תוכלו להזמין חללי עבודה.'}
