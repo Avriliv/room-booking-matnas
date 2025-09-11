@@ -51,7 +51,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('📝 POST /api/bookings - Starting booking creation')
     const body = await request.json()
+    console.log('📝 Request body:', body)
+    
     const { 
       room_id, 
       user_id, 
@@ -123,12 +126,16 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to admins if booking requires approval
     if (status === 'pending') {
+      console.log('📧 Would send email notification for pending booking:', data.id)
+      // Email notifications temporarily disabled for debugging
+      /*
       try {
         await notifyAdminNewBooking(data)
       } catch (emailError) {
         console.error('Error sending email notification:', emailError)
         // Don't fail the booking creation if email fails
       }
+      */
     }
 
     return NextResponse.json({
