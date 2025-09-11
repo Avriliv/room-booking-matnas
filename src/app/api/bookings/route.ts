@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         room:rooms(*),
-        user:profiles(*)
+        user:profiles!bookings_user_id_fkey(*)
       `)
       .order('created_at', { ascending: false })
 
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       .select(`
         *,
         room:rooms(*),
-        user:profiles(*)
+        user:profiles!bookings_user_id_fkey(*)
       `)
       .single()
 
@@ -175,7 +175,7 @@ export async function PUT(request: NextRequest) {
       .select(`
         *,
         room:rooms(*),
-        user:profiles(*)
+        user:profiles!bookings_user_id_fkey(*)
       `)
       .single()
 
