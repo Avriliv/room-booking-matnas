@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifyAdminNewBooking, notifyUserBookingStatus } from '@/lib/email'
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,6 +121,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Send email notification to admins if booking requires approval
+    if (status === 'pending') {
+      try {
+        await notifyAdminNewBooking(data)
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError)
+        // Don't fail the booking creation if email fails
+      }
+    }
+
     return NextResponse.json({
       data,
       message: status === 'pending' 
@@ -185,6 +196,16 @@ export async function PUT(request: NextRequest) {
         { error: 'שגיאה בעדכון ההזמנה' },
         { status: 500 }
       )
+    }
+
+    // Send email notification to user if status changed to approved or rejected
+    if (status && (status === 'approved' || status === 'rejected')) {
+      try {
+        await notifyUserBookingStatus(data, status)
+      } catch (emailError) {
+        console.error('Error sending status notification:', emailError)
+        // Don't fail the update if email fails
+      }
     }
 
     return NextResponse.json({
