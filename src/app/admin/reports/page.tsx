@@ -69,124 +69,66 @@ export default function AdminReportsPage() {
 
   const fetchReportData = async () => {
     try {
-      const days = parseInt(dateRange)
-      const startDate = subDays(new Date(), days)
-      const endDate = new Date()
-
-      // Fetch basic stats
-      const [
-        { count: totalBookings },
-        { count: totalUsers },
-        { count: totalRooms },
-        { data: bookingsData },
-        { data: roomUsageData }
-      ] = await Promise.all([
-        supabase
-          .from('bookings')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', startDate.toISOString()),
-        
-        supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true }),
-        
-        supabase
-          .from('rooms')
-          .select('*', { count: 'exact', head: true }),
-        
-        supabase
-          .from('bookings')
-          .select(`
-            *,
-            room:rooms(name),
-            user:profiles(display_name)
-          `)
-          .gte('created_at', startDate.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(10),
-        
-        supabase
-          .from('bookings')
-          .select(`
-            room_id,
-            rooms(name),
-            count:count()
-          `)
-          .gte('created_at', startDate.toISOString())
-          .eq('status', 'approved')
-      ])
-
-      // Process data
-      const bookings = bookingsData || []
-      const roomUsage = roomUsageData || []
-
-      // Calculate peak hours
-      const hourCounts: Record<number, number> = {}
-      bookings.forEach(booking => {
-        const hour = new Date(booking.start_time).getHours()
-        hourCounts[hour] = (hourCounts[hour] || 0) + 1
-      })
-      const peakHours = Object.entries(hourCounts)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 3)
-        .map(([hour]) => `${hour}:00`)
-
-      // Calculate booking status breakdown
-      const statusBreakdown = bookings.reduce((acc, booking) => {
-        acc[booking.status] = (acc[booking.status] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
-
-      // Calculate room usage
-      const roomUsageMap = new Map()
-      bookings.forEach(booking => {
-        if (booking.status === 'approved' && booking.room) {
-          const roomName = booking.room.name
-          const duration = (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) / (1000 * 60 * 60)
-          
-          if (roomUsageMap.has(roomName)) {
-            const existing = roomUsageMap.get(roomName)
-            roomUsageMap.set(roomName, {
-              roomName,
-              bookingCount: existing.bookingCount + 1,
-              totalHours: existing.totalHours + duration
-            })
-          } else {
-            roomUsageMap.set(roomName, {
-              roomName,
-              bookingCount: 1,
-              totalHours: duration
-            })
-          }
-        }
-      })
-
-      const roomUsageArray = Array.from(roomUsageMap.values())
-        .sort((a, b) => b.bookingCount - a.bookingCount)
-
-      setReportData({
-        totalBookings: totalBookings || 0,
-        totalUsers: totalUsers || 0,
-        totalRooms: totalRooms || 0,
-        averageBookingsPerDay: days > 0 ? (totalBookings || 0) / days : 0,
-        mostPopularRoom: roomUsageArray[0]?.roomName || 'אין נתונים',
-        peakHours,
+      // Mock data for demo purposes
+      const mockReportData: ReportData = {
+        totalBookings: 45,
+        totalUsers: 5,
+        totalRooms: 3,
+        averageBookingsPerDay: 1.5,
+        mostPopularRoom: 'חדר ישיבות מנהלים',
+        peakHours: ['09:00-10:00', '14:00-15:00', '16:00-17:00'],
         bookingStatusBreakdown: {
-          approved: statusBreakdown.approved || 0,
-          pending: statusBreakdown.pending || 0,
-          rejected: statusBreakdown.rejected || 0,
-          cancelled: statusBreakdown.cancelled || 0
+          approved: 35,
+          pending: 5,
+          rejected: 3,
+          cancelled: 2
         },
-        roomUsage: roomUsageArray,
-        recentBookings: bookings.map(booking => ({
-          id: booking.id,
-          title: booking.title,
-          roomName: booking.room?.name || 'לא ידוע',
-          userName: booking.user?.display_name || 'לא ידוע',
-          startTime: booking.start_time,
-          status: booking.status
-        }))
-      })
+        roomUsage: [
+          {
+            roomName: 'חדר ישיבות מנהלים',
+            bookingCount: 20,
+            totalHours: 60
+          },
+          {
+            roomName: 'חדר עבודה שקט',
+            bookingCount: 15,
+            totalHours: 30
+          },
+          {
+            roomName: 'חדר אירועים',
+            bookingCount: 10,
+            totalHours: 40
+          }
+        ],
+        recentBookings: [
+          {
+            id: '1',
+            title: 'ישיבת צוות שבועית',
+            roomName: 'חדר ישיבות מנהלים',
+            userName: 'יוסי כהן',
+            startTime: new Date().toISOString(),
+            status: 'approved'
+          },
+          {
+            id: '2',
+            title: 'עבודה שקטה',
+            roomName: 'חדר עבודה שקט',
+            userName: 'שרה לוי',
+            startTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            status: 'pending'
+          },
+          {
+            id: '3',
+            title: 'אירוע חברתי',
+            roomName: 'חדר אירועים',
+            userName: 'מיכאל רוזן',
+            startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            status: 'approved'
+          }
+        ]
+      }
+
+      setReportData(mockReportData)
     } catch (error) {
       console.error('Error fetching report data:', error)
     } finally {

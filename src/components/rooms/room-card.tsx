@@ -64,6 +64,17 @@ export function RoomCard({
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
       <CardHeader>
+        {/* Room Image */}
+        {room.images && room.images.length > 0 && (
+          <div className="mb-4">
+            <img
+              src={room.images[0]}
+              alt={room.name}
+              className="w-full h-32 object-cover rounded-lg"
+            />
+          </div>
+        )}
+        
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg flex items-center gap-2">

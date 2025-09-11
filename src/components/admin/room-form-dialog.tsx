@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { Room, RoomFormData } from '@/types'
 import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
@@ -29,13 +30,15 @@ export function RoomFormDialog({ open, onClose, room, onSave }: RoomFormDialogPr
     location: '',
     equipment: [],
     tags: [],
+    images: [],
     requires_approval: false,
     bookable: true,
     time_slot_minutes: 30,
     min_duration_minutes: 30,
     max_duration_minutes: 240,
     color: '#3B82F6',
-    cancellation_hours: 4
+    cancellation_hours: 4,
+    active: true
   })
   const [newEquipment, setNewEquipment] = useState('')
   const [newTag, setNewTag] = useState('')
@@ -51,13 +54,15 @@ export function RoomFormDialog({ open, onClose, room, onSave }: RoomFormDialogPr
         location: room.location,
         equipment: room.equipment,
         tags: room.tags,
+        images: room.images,
         requires_approval: room.requires_approval,
         bookable: room.bookable,
         time_slot_minutes: room.time_slot_minutes,
         min_duration_minutes: room.min_duration_minutes,
         max_duration_minutes: room.max_duration_minutes,
         color: room.color,
-        cancellation_hours: room.cancellation_hours
+        cancellation_hours: room.cancellation_hours,
+        active: room.active
       })
     } else {
       setFormData({
@@ -106,40 +111,21 @@ export function RoomFormDialog({ open, onClose, room, onSave }: RoomFormDialogPr
     try {
       setLoading(true)
 
-      if (room) {
-        // Update existing room
-        const { data, error } = await supabase
-          .from('rooms')
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', room.id)
-          .select()
-          .single()
-
-        if (error) throw error
-
-        onSave(data)
-        toast.success('חלל עודכן בהצלחה')
-      } else {
-        // Create new room
-        const { data, error } = await supabase
-          .from('rooms')
-          .insert(formData)
-          .select()
-          .single()
-
-        if (error) throw error
-
-        onSave(data)
-        toast.success('חלל נוצר בהצלחה')
+      // Mock save - create room object with generated ID
+      const savedRoom: Room = {
+        id: room?.id || `room-${Date.now()}`,
+        ...formData,
+        photo_urls: [],
+        created_at: room?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
+      onSave(savedRoom)
+      toast.success(room ? 'חלל עודכן בהצלחה' : 'חלל נוצר בהצלחה')
       onClose()
     } catch (error: unknown) {
       console.error('Error saving room:', error)
-      toast.error(error.message || 'שגיאה בשמירת החלל')
+      toast.error('שגיאה בשמירת החלל')
     } finally {
       setLoading(false)
     }
@@ -384,6 +370,13 @@ export function RoomFormDialog({ open, onClose, room, onSave }: RoomFormDialogPr
               />
             </div>
           </div>
+
+          {/* Image Upload */}
+          <ImageUpload
+            images={formData.images}
+            onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+            maxImages={5}
+          />
 
           {/* Switches */}
           <div className="space-y-4">

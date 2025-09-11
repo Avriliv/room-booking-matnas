@@ -18,7 +18,7 @@ export interface Room {
   location: string
   equipment: string[]
   tags: string[]
-  photo_urls: string[]
+  images: string[]
   requires_approval: boolean
   bookable: boolean
   time_slot_minutes: number
@@ -26,6 +26,7 @@ export interface Room {
   max_duration_minutes: number
   color: string
   cancellation_hours: number
+  active: boolean
   created_at: string
   updated_at: string
 }
@@ -99,6 +100,7 @@ export interface RoomFormData {
   location: string
   equipment: string[]
   tags: string[]
+  images: string[]
   requires_approval: boolean
   bookable: boolean
   time_slot_minutes: number
@@ -106,6 +108,7 @@ export interface RoomFormData {
   max_duration_minutes: number
   color: string
   cancellation_hours: number
+  active: boolean
 }
 
 export interface AuditLog {

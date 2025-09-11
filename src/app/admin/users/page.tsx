@@ -53,12 +53,18 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const { data: usersData } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
 
-      setUsers(usersData || [])
+      if (error) {
+        console.error('Error fetching users:', error)
+        toast.error('שגיאה בטעינת המשתמשים')
+        return
+      }
+
+      setUsers(data || [])
     } catch (error) {
       console.error('Error fetching users:', error)
       toast.error('שגיאה בטעינת המשתמשים')
@@ -69,24 +75,37 @@ export default function AdminUsersPage() {
 
   const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ active: !currentStatus })
-        .eq('id', userId)
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: userId,
+          active: !currentStatus
+        })
+      })
 
-      if (error) throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('Error updating user status:', result.error)
+        toast.error(result.error || 'שגיאה בעדכון סטטוס המשתמש')
+        return
+      }
 
       setUsers(prev => 
         prev.map(user => 
           user.id === userId 
-            ? { ...user, active: !currentStatus }
+            ? { ...user, active: !currentStatus, updated_at: new Date().toISOString() }
             : user
         )
       )
 
       toast.success(`משתמש ${!currentStatus ? 'הופעל' : 'הושבת'} בהצלחה`)
     } catch (error: unknown) {
-      toast.error(error.message || 'שגיאה בעדכון סטטוס המשתמש')
+      console.error('Error updating user status:', error)
+      toast.error('שגיאה בעדכון סטטוס המשתמש')
     }
   }
 
@@ -94,17 +113,23 @@ export default function AdminUsersPage() {
     if (!confirm('האם אתה בטוח שברצונך למחוק את המשתמש?')) return
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
+      const response = await fetch(`/api/users?id=${userId}`, {
+        method: 'DELETE'
+      })
 
-      if (error) throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('Error deleting user:', result.error)
+        toast.error(result.error || 'שגיאה במחיקת המשתמש')
+        return
+      }
 
       setUsers(prev => prev.filter(user => user.id !== userId))
-      toast.success('משתמש נמחק בהצלחה')
+      toast.success(result.message || 'משתמש נמחק בהצלחה')
     } catch (error: unknown) {
-      toast.error(error.message || 'שגיאה במחיקת המשתמש')
+      console.error('Error deleting user:', error)
+      toast.error('שגיאה במחיקת המשתמש')
     }
   }
 

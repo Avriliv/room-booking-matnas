@@ -39,17 +39,99 @@ export default function AdminApprovalsPage() {
 
   const fetchPendingBookings = async () => {
     try {
-      const { data: bookingsData } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          room:rooms(*),
-          user:profiles(*)
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: true })
+      // Mock data for demo purposes
+      const mockPendingBookings: Booking[] = [
+        {
+          id: '4',
+          room_id: '1',
+          user_id: 'user-4',
+          title: 'ישיבת דירקטוריון',
+          description: 'ישיבת דירקטוריון חודשית',
+          start_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
+          end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString(), // 3 days from now + 3 hours
+          attendee_count: 15,
+          attendees: ['ceo@example.com', 'cfo@example.com', 'cto@example.com'],
+          status: 'pending',
+          requires_approval_snapshot: true,
+          is_recurring: false,
+          created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+          updated_at: new Date().toISOString(),
+          room: {
+            id: '1',
+            name: 'חדר ישיבות מנהלים',
+            description: 'חדר ישיבות מפואר',
+            capacity: 12,
+            location: 'קומה 3, כנף צפון',
+            equipment: ['מקרן', 'לוח חכם'],
+            tags: ['ישיבות', 'מנהלים'],
+            photo_urls: [],
+            requires_approval: true,
+            bookable: true,
+            time_slot_minutes: 30,
+            min_duration_minutes: 60,
+            max_duration_minutes: 240,
+            color: '#3B82F6',
+            cancellation_hours: 4,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          user: {
+            id: 'user-4',
+            display_name: 'רחל גולדברג',
+            email: 'rachel@example.com',
+            role: 'user',
+            active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        },
+        {
+          id: '5',
+          room_id: '3',
+          user_id: 'user-5',
+          title: 'אירוע חברתי',
+          description: 'אירוע חברתי לצוות המחלקה',
+          start_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week from now
+          end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(), // 1 week from now + 4 hours
+          attendee_count: 30,
+          attendees: ['team1@example.com', 'team2@example.com'],
+          status: 'pending',
+          requires_approval_snapshot: true,
+          is_recurring: false,
+          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+          updated_at: new Date().toISOString(),
+          room: {
+            id: '3',
+            name: 'חדר אירועים',
+            description: 'חדר גדול לאירועים',
+            capacity: 50,
+            location: 'קומה 1, אולם מרכזי',
+            equipment: ['מערכת הגברה', 'תאורה'],
+            tags: ['אירועים', 'הרצאות'],
+            photo_urls: [],
+            requires_approval: true,
+            bookable: true,
+            time_slot_minutes: 60,
+            min_duration_minutes: 120,
+            max_duration_minutes: 480,
+            color: '#F59E0B',
+            cancellation_hours: 24,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          user: {
+            id: 'user-5',
+            display_name: 'מיכאל רוזן',
+            email: 'michael@example.com',
+            role: 'editor',
+            active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        }
+      ]
 
-      setPendingBookings(bookingsData || [])
+      setPendingBookings(mockPendingBookings)
     } catch (error) {
       console.error('Error fetching pending bookings:', error instanceof Error ? error.message : 'Unknown error')
       toast.error('שגיאה בטעינת ההזמנות הממתינות')
@@ -62,27 +144,14 @@ export default function AdminApprovalsPage() {
     try {
       setProcessing(bookingId)
       
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', bookingId)
-
-      if (error) throw error
-
-      // Remove from pending list
+      // Mock approve - just update local state
       setPendingBookings(prev => prev.filter(booking => booking.id !== bookingId))
       
       toast.success('הזמנה אושרה בהצלחה')
       
-      // TODO: Send email notification to user
-      
     } catch (error: unknown) {
-      console.error('Error approving booking:', error)
-      toast.error(error.message || 'שגיאה באישור ההזמנה')
+      console.error('Error approving booking:', error instanceof Error ? error.message : 'Unknown error')
+      toast.error('שגיאה באישור ההזמנה')
     } finally {
       setProcessing(null)
     }
@@ -97,29 +166,16 @@ export default function AdminApprovalsPage() {
     try {
       setProcessing(bookingId)
       
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          status: 'rejected',
-          rejection_reason: rejectionReason,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', bookingId)
-
-      if (error) throw error
-
-      // Remove from pending list
+      // Mock reject - just update local state
       setPendingBookings(prev => prev.filter(booking => booking.id !== bookingId))
       
       toast.success('הזמנה נדחתה')
       setRejectionReason('')
       setSelectedBooking(null)
       
-      // TODO: Send email notification to user
-      
     } catch (error: unknown) {
       console.error('Error rejecting booking:', error instanceof Error ? error.message : 'Unknown error')
-      toast.error(error instanceof Error ? error.message : 'שגיאה בדחיית ההזמנה')
+      toast.error('שגיאה בדחיית ההזמנה')
     } finally {
       setProcessing(null)
     }

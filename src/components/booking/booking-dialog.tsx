@@ -68,15 +68,17 @@ export function BookingDialog({
 
   const fetchRooms = async () => {
     try {
-      const { data: roomsData } = await supabase
-        .from('rooms')
-        .select('*')
-        .eq('bookable', true)
-        .order('name')
+      const response = await fetch('/api/rooms?active=true')
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה בטעינת החדרים')
+      }
 
-      setRooms(roomsData || [])
+      setRooms(result.data || [])
     } catch (error) {
       console.error('Error fetching rooms:', error)
+      toast.error('שגיאה בטעינת החדרים')
     }
   }
 

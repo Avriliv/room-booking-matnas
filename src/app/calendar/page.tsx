@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useAuth } from '@/hooks/use-auth'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,9 +27,11 @@ import { CalendarDayView } from '@/components/calendar/calendar-day-view'
 import { CalendarWeekView } from '@/components/calendar/calendar-week-view'
 import { CalendarMonthView } from '@/components/calendar/calendar-month-view'
 import { BookingDialog } from '@/components/booking/booking-dialog'
+import { toast } from 'sonner'
 
 export default function CalendarPage() {
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const [rooms, setRooms] = useState<Room[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,28 +44,30 @@ export default function CalendarPage() {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch rooms
-        const { data: roomsData } = await supabase
-          .from('rooms')
-          .select('*')
-          .eq('bookable', true)
-          .order('name')
-
-        setRooms(roomsData || [])
-
-        // Fetch bookings for the current period
-        await fetchBookings()
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      } finally {
-        setLoading(false)
+  const fetchData = async () => {
+    try {
+      // Fetch rooms
+      const roomsResponse = await fetch('/api/rooms?active=true')
+      const roomsResult = await roomsResponse.json()
+      
+      if (!roomsResponse.ok) {
+        throw new Error(roomsResult.error || 'שגיאה בטעינת החדרים')
       }
+
+      setRooms(roomsResult.data || [])
+
+      // Fetch bookings for the current period
+      await fetchBookings()
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      toast.error('שגיאה בטעינת הנתונים')
+    } finally {
+      setLoading(false)
     }
+  }
 
     fetchData()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     // Check for room parameter in URL
@@ -75,42 +80,17 @@ export default function CalendarPage() {
 
   const fetchBookings = async () => {
     try {
-      let startDate: Date
-      let endDate: Date
-
-      switch (view) {
-        case 'day':
-          startDate = new Date(currentDate)
-          endDate = addDays(currentDate, 1)
-          break
-        case 'week':
-          startDate = startOfWeek(currentDate, { weekStartsOn: 0 })
-          endDate = endOfWeek(currentDate, { weekStartsOn: 0 })
-          break
-        case 'month':
-          startDate = startOfMonth(currentDate)
-          endDate = endOfMonth(currentDate)
-          break
-        default:
-          startDate = startOfWeek(currentDate, { weekStartsOn: 0 })
-          endDate = endOfWeek(currentDate, { weekStartsOn: 0 })
+      const bookingsResponse = await fetch('/api/bookings')
+      const bookingsResult = await bookingsResponse.json()
+      
+      if (!bookingsResponse.ok) {
+        throw new Error(bookingsResult.error || 'שגיאה בטעינת ההזמנות')
       }
 
-      const { data: bookingsData } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          room:rooms(*),
-          user:profiles(*)
-        `)
-        .gte('start_time', startDate.toISOString())
-        .lte('start_time', endDate.toISOString())
-        .eq('status', 'approved')
-        .order('start_time')
-
-      setBookings(bookingsData || [])
+      setBookings(bookingsResult.data || [])
     } catch (error) {
       console.error('Error fetching bookings:', error)
+      toast.error('שגיאה בטעינת ההזמנות')
     }
   }
 
@@ -313,25 +293,32 @@ export default function CalendarPage() {
           defaultRoom={selectedRoomId}
           onSubmit={async (bookingData) => {
             try {
-              const { data: { user } } = await supabase.auth.getUser()
-              if (!user) return
-
-              const { error } = await supabase
-                .from('bookings')
-                .insert({
+              const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
                   ...bookingData,
-                  user_id: user.id,
-                  status: rooms.find(r => r.id === bookingData.room_id)?.requires_approval ? 'pending' : 'approved'
+                  user_id: user?.id || 'mock-user'
                 })
+              })
 
-              if (error) throw error
+              const result = await response.json()
 
-              await fetchBookings()
+              if (!response.ok) {
+                throw new Error(result.error || 'שגיאה ביצירת ההזמנה')
+              }
+
+              setBookings(prev => [result.data, ...prev])
+              toast.success(result.message || 'הזמנה נוצרה בהצלחה!')
+              
               setShowBookingDialog(false)
               setSelectedDate(null)
               setSelectedRoomId(null)
             } catch (error: unknown) {
               console.error('Error creating booking:', error)
+              toast.error('שגיאה ביצירת ההזמנה')
             }
           }}
         />

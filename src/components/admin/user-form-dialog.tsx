@@ -82,60 +82,65 @@ export function UserFormDialog({ open, onClose, user, onSave }: UserFormDialogPr
 
       if (user) {
         // Update existing user
-        const { data, error } = await supabase
-          .from('profiles')
-          .update({
+        const response = await fetch('/api/users', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: user.id,
             display_name: formData.display_name,
             email: formData.email,
-            job_title: formData.job_title || null,
-            phone: formData.phone || null,
-            role: formData.role,
-            active: formData.active,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id)
-          .select()
-          .single()
-
-        if (error) throw error
-
-        onSave(data)
-        toast.success('משתמש עודכן בהצלחה')
-      } else {
-        // Create new user - first create auth user
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email,
-          password: 'temp123456', // Temporary password
-          email_confirm: true
-        })
-
-        if (authError) throw authError
-
-        // Create profile
-        const { data, error } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            display_name: formData.display_name,
-            email: formData.email,
-            job_title: formData.job_title || null,
-            phone: formData.phone || null,
+            job_title: formData.job_title,
+            phone: formData.phone,
             role: formData.role,
             active: formData.active
           })
-          .select()
-          .single()
+        })
 
-        if (error) throw error
+        const result = await response.json()
 
-        onSave(data)
-        toast.success('משתמש נוצר בהצלחה')
+        if (!response.ok) {
+          console.error('Error updating user:', result.error)
+          toast.error(result.error || 'שגיאה בעדכון המשתמש')
+          return
+        }
+
+        onSave(result.data)
+        toast.success(result.message || 'משתמש עודכן בהצלחה')
+      } else {
+        // Create new user
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            display_name: formData.display_name,
+            email: formData.email,
+            job_title: formData.job_title,
+            phone: formData.phone,
+            role: formData.role,
+            active: formData.active
+          })
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+          console.error('Error creating user:', result.error)
+          toast.error(result.error || 'שגיאה ביצירת המשתמש')
+          return
+        }
+
+        onSave(result.data)
+        toast.success(result.message || 'משתמש נוצר בהצלחה')
       }
 
       onClose()
     } catch (error: unknown) {
       console.error('Error saving user:', error)
-      toast.error(error.message || 'שגיאה בשמירת המשתמש')
+      toast.error('שגיאה בשמירת המשתמש')
     } finally {
       setLoading(false)
     }

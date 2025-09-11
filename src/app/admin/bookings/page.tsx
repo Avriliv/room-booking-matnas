@@ -3,7 +3,10 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabase'
+import { Booking } from '@/types'
+
+type RoomOption = { id: string; name: string }
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -36,7 +39,6 @@ import {
   User,
   Building2
 } from 'lucide-react'
-import { Booking } from '@/types'
 import { format } from 'date-fns'
 import { he } from 'date-fns/locale'
 import { toast } from 'sonner'
@@ -47,8 +49,7 @@ export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [roomFilter, setRoomFilter] = useState('all')
-  const [rooms, setRooms] = useState<Room[]>([])
-  const supabase = createClientComponentClient()
+  const [roomOptions, setRoomOptions] = useState<RoomOption[]>([])
 
   useEffect(() => {
     fetchData()
@@ -56,25 +57,25 @@ export default function AdminBookingsPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch rooms for filter
-      const { data: roomsData } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .order('name')
+      // Fetch rooms
+      const roomsResponse = await fetch('/api/rooms?active=true')
+      const roomsResult = await roomsResponse.json()
+      
+      if (!roomsResponse.ok) {
+        throw new Error(roomsResult.error || 'שגיאה בטעינת החדרים')
+      }
 
-      setRooms(roomsData || [])
+      setRoomOptions(roomsResult.data?.map((room: any) => ({ id: room.id, name: room.name })) || [])
 
       // Fetch bookings
-      const { data: bookingsData } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          room:rooms(*),
-          user:profiles(*)
-        `)
-        .order('created_at', { ascending: false })
+      const bookingsResponse = await fetch('/api/bookings')
+      const bookingsResult = await bookingsResponse.json()
+      
+      if (!bookingsResponse.ok) {
+        throw new Error(bookingsResult.error || 'שגיאה בטעינת ההזמנות')
+      }
 
-      setBookings(bookingsData || [])
+      setBookings(bookingsResult.data || [])
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('שגיאה בטעינת הנתונים')
@@ -85,15 +86,23 @@ export default function AdminBookingsPage() {
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
+      const response = await fetch('/api/bookings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: bookingId,
           status: newStatus,
-          updated_at: new Date().toISOString()
+          rejection_reason: newStatus === 'rejected' ? 'נדחה על ידי מנהל' : undefined
         })
-        .eq('id', bookingId)
+      })
 
-      if (error) throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה בעדכון סטטוס ההזמנה')
+      }
 
       setBookings(prev => 
         prev.map(booking => 
@@ -103,9 +112,10 @@ export default function AdminBookingsPage() {
         )
       )
 
-      toast.success('סטטוס ההזמנה עודכן בהצלחה')
+      toast.success(result.message || 'סטטוס ההזמנה עודכן בהצלחה')
     } catch (error: unknown) {
-      toast.error(error.message || 'שגיאה בעדכון סטטוס ההזמנה')
+      console.error('Error updating booking status:', error)
+      toast.error('שגיאה בעדכון סטטוס ההזמנה')
     }
   }
 
@@ -113,17 +123,21 @@ export default function AdminBookingsPage() {
     if (!confirm('האם אתה בטוח שברצונך למחוק את ההזמנה?')) return
 
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .eq('id', bookingId)
+      const response = await fetch(`/api/bookings?id=${bookingId}`, {
+        method: 'DELETE'
+      })
 
-      if (error) throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה במחיקת ההזמנה')
+      }
 
       setBookings(prev => prev.filter(booking => booking.id !== bookingId))
-      toast.success('הזמנה נמחקה בהצלחה')
+      toast.success(result.message || 'הזמנה נמחקה בהצלחה')
     } catch (error: unknown) {
-      toast.error(error.message || 'שגיאה במחיקת ההזמנה')
+      console.error('Error deleting booking:', error)
+      toast.error('שגיאה במחיקת ההזמנה')
     }
   }
 
@@ -227,7 +241,7 @@ export default function AdminBookingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">כל החללים</SelectItem>
-                  {rooms.map(room => (
+                  {roomOptions.map(room => (
                     <SelectItem key={room.id} value={room.id}>
                       {room.name}
                     </SelectItem>
