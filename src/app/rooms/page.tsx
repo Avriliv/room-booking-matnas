@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { MainLayout } from '@/components/layout/main-layout'
 import { RoomCard } from '@/components/rooms/room-card'
 import { Input } from '@/components/ui/input'
@@ -21,7 +21,10 @@ export default function RoomsPage() {
   const [capacityFilter, setCapacityFilter] = useState('all')
   const [tagFilter, setTagFilter] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const supabase = createClientComponentClient()
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   useEffect(() => {
     const fetchData = async () => {
