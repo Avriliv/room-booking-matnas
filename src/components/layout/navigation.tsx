@@ -26,7 +26,6 @@ import {
   TrendingUp,
   Edit
 } from 'lucide-react'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { cn } from '@/lib/utils'
 
 export function Navigation() {
@@ -51,7 +50,6 @@ export function Navigation() {
               <span className="text-sm text-gray-600 mr-2">המחלקה לחינוך בלתי פורמלי מטה אשר</span>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <ThemeToggle />
               <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
                 <Link href="/auth/login">התחבר</Link>
               </Button>
@@ -136,7 +134,6 @@ export function Navigation() {
           </div>
           <div className="flex items-center">
             <div className="ml-4 flex items-center space-x-2 md:ml-6">
-              <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">

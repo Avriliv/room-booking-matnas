@@ -141,55 +141,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Benefits */}
-        <div className="mt-20">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">
-              למה לבחור בנו?
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              פתרון מקיף וחכם לניהול חללי עבודה
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <div className="text-center">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white mx-auto">
-                <CheckCircle className="h-6 w-6" />
-              </div>
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
-                קל לשימוש
-              </h3>
-              <p className="mt-2 text-base text-gray-500">
-                ממשק משתמש אינטואיטיבי ונוח לכל המשתמשים
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white mx-auto">
-                <CheckCircle className="h-6 w-6" />
-              </div>
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
-                גמישות מלאה
-              </h3>
-              <p className="mt-2 text-base text-gray-500">
-                התאמה מלאה לצרכים של הארגון שלך
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white mx-auto">
-                <CheckCircle className="h-6 w-6" />
-              </div>
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
-                אמין ובטוח
-              </h3>
-              <p className="mt-2 text-base text-gray-500">
-                אבטחה מתקדמת ואמינות גבוהה
-              </p>
-            </div>
-          </div>
-        </div>
       </main>
 
       {/* Footer */}

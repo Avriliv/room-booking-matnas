@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter, Heebo } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/ui/theme-provider";
 
 export const dynamic = 'force-dynamic'
 
@@ -31,15 +30,8 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${heebo.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );
