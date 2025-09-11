@@ -17,15 +17,11 @@ NEXT_PUBLIC_APP_URL=http://localhost:3001
 NODE_ENV=development
 ```
 
-### 1.2 הגדרת OAuth Providers (אופציונלי)
+### 1.2 התחברות למערכת
 
 האפליקציה תומכת בהתחברות עם:
-- **Google** - חינם עד 100,000 בקשות בחודש
-- **Microsoft/Outlook** - חינם עד 100,000 בקשות בחודש
-
-**מדריכי הגדרה:**
-- [הגדרת Google OAuth](GOOGLE_OAUTH_SETUP.md)
-- [הגדרת Microsoft OAuth](MICROSOFT_OAUTH_SETUP.md)
+- **אימייל וסיסמה** - התחברות פשוטה ומהירה
+- **הרשמה אוטומטית** - יצירת חשבון חדש בקלות
 
 ### 1.3 קבלת מפתחות Supabase
 
