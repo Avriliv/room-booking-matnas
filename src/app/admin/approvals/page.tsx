@@ -39,37 +39,22 @@ export default function AdminApprovalsPage() {
 
   const fetchPendingBookings = async () => {
     try {
-      // Mock data for demo purposes
-      const mockPendingBookings: Booking[] = [
-        {
-          id: '4',
-          room_id: '1',
-          user_id: 'user-4',
-          title: 'ישיבת דירקטוריון',
-          description: 'ישיבת דירקטוריון חודשית',
-          start_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
-          end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString(), // 3 days from now + 3 hours
-          attendee_count: 15,
-          attendees: ['ceo@example.com', 'cfo@example.com', 'cto@example.com'],
-          status: 'pending',
-          requires_approval_snapshot: true,
-          is_recurring: false,
-          created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-          updated_at: new Date().toISOString(),
-          room: {
-            id: '1',
-            name: 'חדר ישיבות מנהלים',
-            description: 'חדר ישיבות מפואר',
-            capacity: 12,
-            location: 'קומה 3, כנף צפון',
-            equipment: ['מקרן', 'לוח חכם'],
-            tags: ['ישיבות', 'מנהלים'],
-            photo_urls: [],
-            requires_approval: true,
-            bookable: true,
-            time_slot_minutes: 30,
-            min_duration_minutes: 60,
-            max_duration_minutes: 240,
+      // Fetch pending bookings from API
+      const response = await fetch('/api/bookings?status=pending')
+      if (response.ok) {
+        const result = await response.json()
+        setPendingBookings(result.data || [])
+      } else {
+        setPendingBookings([])
+      }
+    } catch (error) {
+      console.error('Error fetching pending bookings:', error)
+      setPendingBookings([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
             color: '#3B82F6',
             cancellation_hours: 4,
             created_at: new Date().toISOString(),
@@ -131,14 +116,6 @@ export default function AdminApprovalsPage() {
         }
       ]
 
-      setPendingBookings(mockPendingBookings)
-    } catch (error) {
-      console.error('Error fetching pending bookings:', error instanceof Error ? error.message : 'Unknown error')
-      toast.error('שגיאה בטעינת ההזמנות הממתינות')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleApprove = async (bookingId: string) => {
     try {

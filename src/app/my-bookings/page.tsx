@@ -39,72 +39,19 @@ export default function MyBookingsPage() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        // Try to fetch from API first
-        try {
-          const response = await fetch('/api/bookings?userId=mock-user')
-          const result = await response.json()
-          
-          if (response.ok) {
-            setBookings(result.data || [])
-            return
-          }
-        } catch (apiError) {
-          console.log('API not available, using mock data')
+        // Fetch user's bookings from API
+        const response = await fetch('/api/bookings')
+        const result = await response.json()
+        
+        if (response.ok) {
+          setBookings(result.data || [])
+        } else {
+          console.error('Error fetching bookings:', result.error)
+          setBookings([])
         }
-
-        // Fallback to mock data if API fails
-        const mockBookings: Booking[] = [
-          {
-            id: '1',
-            room_id: '1',
-            user_id: 'mock-user',
-            title: 'ישיבת צוות שבועית',
-            description: 'ישיבת צוות שבועית של המחלקה',
-            start_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-            end_time: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-            attendee_count: 8,
-            attendees: ['user1@example.com', 'user2@example.com'],
-            status: 'approved',
-            requires_approval_snapshot: true,
-            is_recurring: false,
-            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-            room: {
-              id: '1',
-              name: 'חדר ישיבות מנהלים',
-              description: 'חדר ישיבות מפואר',
-              capacity: 12,
-              location: 'קומה 3, כנף צפון',
-              equipment: ['מקרן', 'לוח חכם'],
-              tags: ['ישיבות', 'מנהלים'],
-              images: [],
-              requires_approval: true,
-              bookable: true,
-              time_slot_minutes: 30,
-              min_duration_minutes: 60,
-              max_duration_minutes: 240,
-              color: '#3B82F6',
-              cancellation_hours: 4,
-              active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            },
-            user: {
-              id: 'mock-user',
-              display_name: 'משתמש דמה',
-              email: 'demo@example.com',
-              role: 'admin',
-              active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          }
-        ]
-
-        setBookings(mockBookings)
       } catch (error) {
         console.error('Error fetching bookings:', error)
-        toast.error('שגיאה בטעינת ההזמנות')
+        setBookings([])
       } finally {
         setLoading(false)
       }
@@ -112,6 +59,7 @@ export default function MyBookingsPage() {
 
     fetchBookings()
   }, [])
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,98 +23,91 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
   const { user } = useAuth()
 
+  const getRoomAvailability = useCallback((roomId: string) => {
+    const now = new Date()
+    const roomBookings = bookings.filter(booking => booking.room_id === roomId)
+    
+    for (const booking of roomBookings) {
+      const startTime = new Date(booking.start_time)
+      const endTime = new Date(booking.end_time)
+      
+      if (now >= startTime && now <= endTime) {
+        return { status: 'busy', booking }
+      }
+    }
+    
+    return { status: 'available', booking: null }
+  }, [bookings])
+
+  // Memoize expensive calculations
+  const roomStats = useMemo(() => {
+    const totalRooms = rooms.length
+    const busyRooms = rooms.filter(room => getRoomAvailability(room.id).status === 'busy').length
+    const availableRooms = totalRooms - busyRooms
+    const availabilityPercentage = totalRooms > 0 ? Math.round((availableRooms / totalRooms) * 100) : 0
+    
+    return {
+      totalRooms,
+      busyRooms,
+      availableRooms,
+      availabilityPercentage
+    }
+  }, [rooms, getRoomAvailability])
+
   useEffect(() => {
     setMounted(true)
   }, [])
 
   useEffect(() => {
+    let isMounted = true
+    
     const fetchData = async () => {
       try {
         setError(null)
-        // Mock data for demo purposes
-        const mockRooms: Room[] = [
-          {
-            id: '1',
-            name: 'חדר ישיבות מנהלים',
-            description: 'חדר ישיבות מפואר עם ציוד מתקדם',
-            capacity: 12,
-            location: 'קומה 3, כנף צפון',
-            equipment: ['מקרן', 'לוח חכם', 'מערכת שמע'],
-            tags: ['ישיבות', 'מנהלים'],
-            images: [],
-            requires_approval: true,
-            bookable: true,
-            time_slot_minutes: 30,
-            min_duration_minutes: 60,
-            max_duration_minutes: 240,
-            color: '#3B82F6',
-            cancellation_hours: 4,
-            active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            name: 'חדר עבודה שקט',
-            description: 'חדר עבודה שקט לעבודה אישית',
-            capacity: 4,
-            location: 'קומה 2, כנף דרום',
-            equipment: ['מחשב', 'מדפסת'],
-            tags: ['עבודה', 'שקט'],
-            images: [],
-            requires_approval: false,
-            bookable: true,
-            time_slot_minutes: 30,
-            min_duration_minutes: 30,
-            max_duration_minutes: 120,
-            color: '#10B981',
-            cancellation_hours: 2,
-            active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
-
-        const mockBookings: Booking[] = [
-          {
-            id: '1',
-            room_id: '1',
-            user_id: 'user-1',
-            title: 'ישיבת צוות שבועית',
-            description: 'ישיבת צוות שבועית של המחלקה',
-            start_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-            end_time: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours from now
-            attendee_count: 8,
-            attendees: ['user1@example.com', 'user2@example.com'],
-            status: 'approved',
-            requires_approval_snapshot: true,
-            is_recurring: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            room: mockRooms[0],
-            user: {
-              id: 'user-1',
-              display_name: 'יוסי כהן',
-              email: 'yossi@example.com',
-              role: 'admin',
-              active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          }
-        ]
-
-        setRooms(mockRooms)
-        setBookings(mockBookings)
+        
+        // Fetch real data from API with timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        
+        const [roomsResponse, bookingsResponse] = await Promise.all([
+          fetch('/api/rooms?active=true', { signal: controller.signal }),
+          fetch('/api/bookings', { signal: controller.signal })
+        ])
+        
+        clearTimeout(timeoutId)
+        
+        if (!isMounted) return
+        
+        if (roomsResponse.ok) {
+          const roomsResult = await roomsResponse.json()
+          setRooms(roomsResult.data || [])
+        }
+        
+        if (bookingsResponse.ok) {
+          const bookingsResult = await bookingsResponse.json()
+          setBookings(bookingsResult.data || [])
+        }
       } catch (error) {
+        if (!isMounted) return
+        
+        if (error instanceof Error && error.name === 'AbortError') {
+          setError('הטעינה ארכה יותר מדי זמן. אנא נסה שוב.')
+        } else {
         console.error('Error fetching data:', error)
         setError('שגיאה בטעינת הנתונים. אנא נסה שוב.')
+        }
       } finally {
+        if (isMounted) {
         setLoading(false)
+        }
       }
     }
 
     fetchData()
+    
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   if (!mounted) {
@@ -189,22 +182,6 @@ export default function Dashboard() {
     )
   }
 
-  const getRoomAvailability = (roomId: string) => {
-    const now = new Date()
-    const roomBookings = bookings.filter(booking => booking.room_id === roomId)
-    
-    for (const booking of roomBookings) {
-      const startTime = new Date(booking.start_time)
-      const endTime = new Date(booking.end_time)
-      
-      if (now >= startTime && now <= endTime) {
-        return { status: 'busy', booking }
-      }
-    }
-    
-    return { status: 'available', booking: null }
-  }
-
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -245,7 +222,7 @@ export default function Dashboard() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{rooms.length}</div>
+              <div className="text-2xl font-bold">{roomStats.totalRooms}</div>
               <p className="text-xs text-muted-foreground">
                 חללי עבודה פעילים
               </p>
@@ -271,9 +248,7 @@ export default function Dashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {rooms.filter(room => getRoomAvailability(room.id).status === 'busy').length}
-              </div>
+              <div className="text-2xl font-bold">{roomStats.busyRooms}</div>
               <p className="text-xs text-muted-foreground">
                 כרגע בשימוש
               </p>
@@ -286,9 +261,7 @@ export default function Dashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {Math.round((rooms.filter(room => getRoomAvailability(room.id).status === 'available').length / rooms.length) * 100)}%
-              </div>
+              <div className="text-2xl font-bold">{roomStats.availabilityPercentage}%</div>
               <p className="text-xs text-muted-foreground">
                 אחוז זמינות
               </p>
@@ -362,29 +335,21 @@ export default function Dashboard() {
             {rooms.map((room) => {
               const availability = getRoomAvailability(room.id)
               return (
-                <Card key={room.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
+                <Card key={room.id} className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+                  <CardHeader className="p-0">
                     {/* Room Image */}
-                    {room.images && room.images.length > 0 && (
-                      <div className="mb-4">
+                    {room.images && room.images.length > 0 ? (
+                      <div className="relative h-48 overflow-hidden">
                         <img
                           src={room.images[0]}
                           alt={room.name}
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                      </div>
-                    )}
-                    
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{room.name}</CardTitle>
-                        <CardDescription className="mt-1">
-                          {room.location} • {room.capacity} מקומות
-                        </CardDescription>
-                      </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        <div className="absolute top-3 right-3">
                       <Badge 
                         variant={availability.status === 'available' ? 'default' : 'destructive'}
-                        className="flex items-center gap-1"
+                            className="flex items-center gap-1 backdrop-blur-sm bg-white/90"
                       >
                         {availability.status === 'available' ? (
                           <>
@@ -398,6 +363,23 @@ export default function Dashboard() {
                           </>
                         )}
                       </Badge>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                        <Building2 className="h-16 w-16 text-blue-400" />
+                      </div>
+                    )}
+                    
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-semibold text-gray-900 mb-1">{room.name}</CardTitle>
+                          <CardDescription className="text-sm text-gray-600">
+                            {room.location} • {room.capacity} מקומות
+                          </CardDescription>
+                        </div>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>

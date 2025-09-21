@@ -9,10 +9,12 @@ if (!url || !anon) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables')
 }
 
-// Mock Supabase client for demo purposes
+// Supabase client for production
 export const supabase = createClient(url, anon, {
   auth: {
-    persistSession: false
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
 })
 

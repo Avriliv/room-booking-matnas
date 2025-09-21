@@ -38,118 +38,39 @@ export default function RoomPage() {
   useEffect(() => {
     const fetchRoomData = async () => {
       try {
-        // Mock data for demo purposes
-        const mockRooms: Room[] = [
-          {
-            id: '1',
-            name: 'חדר ישיבות מנהלים',
-            description: 'חדר ישיבות מפואר עם ציוד מתקדם. החדר כולל מקרן איכותי, לוח חכם אינטראקטיבי, ומערכת שמע מתקדמת. מתאים לישיבות חשובות, פגישות עם לקוחות, והצגות.',
-            capacity: 12,
-            location: 'קומה 3, כנף צפון',
-            equipment: ['מקרן', 'לוח חכם', 'מערכת שמע', 'WiFi', 'מסך גדול'],
-            tags: ['ישיבות', 'מנהלים', 'פגישות'],
-            photo_urls: [],
-            requires_approval: true,
-            bookable: true,
-            time_slot_minutes: 30,
-            min_duration_minutes: 60,
-            max_duration_minutes: 240,
-            color: '#3B82F6',
-            cancellation_hours: 4,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            name: 'חדר עבודה שקט',
-            description: 'חדר עבודה שקט ונוח לעבודה אישית או בקבוצות קטנות. החדר מצויד במחשבים, מדפסת, וכל הציוד הנדרש לעבודה יעילה.',
-            capacity: 4,
-            location: 'קומה 2, כנף דרום',
-            equipment: ['מחשב', 'מדפסת', 'WiFi', 'ספרים'],
-            tags: ['עבודה', 'שקט', 'מחשבים'],
-            photo_urls: [],
-            requires_approval: false,
-            bookable: true,
-            time_slot_minutes: 30,
-            min_duration_minutes: 30,
-            max_duration_minutes: 120,
-            color: '#10B981',
-            cancellation_hours: 2,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: '3',
-            name: 'חדר אירועים',
-            description: 'חדר גדול ומרווח לאירועים, חגיגות, והרצאות. החדר כולל מערכת הגברה מתקדמת, תאורה מקצועית, ומסך גדול להצגות.',
-            capacity: 50,
-            location: 'קומה 1, אולם מרכזי',
-            equipment: ['מערכת הגברה', 'תאורה', 'מסך גדול', 'WiFi', 'קפה'],
-            tags: ['אירועים', 'חגיגות', 'הרצאות'],
-            photo_urls: [],
-            requires_approval: true,
-            bookable: true,
-            time_slot_minutes: 60,
-            min_duration_minutes: 120,
-            max_duration_minutes: 480,
-            color: '#F59E0B',
-            cancellation_hours: 24,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ]
-
-        // Find the room by ID
-        const roomData = mockRooms.find(room => room.id === params.id)
+        // Fetch room data from API
+        const roomId = params.id as string
+        const response = await fetch(`/api/rooms/${roomId}`)
         
-        if (!roomData) {
-          console.error('Room not found:', params.id)
-          router.push('/rooms')
-          return
+        if (!response.ok) {
+          throw new Error('שגיאה בטעינת פרטי החדר')
         }
-
-        setRoom(roomData)
-
-        // Mock bookings for this room
-        const mockBookings: Booking[] = roomData.id === '1' ? [
-          {
-            id: '1',
-            room_id: roomData.id,
-            user_id: 'user-1',
-            title: 'ישיבת צוות שבועית',
-            description: 'ישיבת צוות שבועית של המחלקה',
-            start_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-            end_time: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours from now
-            attendee_count: 8,
-            attendees: ['user1@example.com', 'user2@example.com'],
-            status: 'approved',
-            requires_approval_snapshot: true,
-            is_recurring: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            user: {
-              id: 'user-1',
-              display_name: 'יוסי כהן',
-              email: 'yossi@example.com',
-              role: 'admin',
-              active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          }
-        ] : []
-
-        setBookings(mockBookings)
+        
+        const result = await response.json()
+        const room = result.data
+        
+        if (!room) {
+          throw new Error('חדר לא נמצא')
+        }
+        
+        setRoom(room)
+        
+        // Fetch bookings for this room
+        const bookingsResponse = await fetch(`/api/bookings?roomId=${roomId}`)
+        if (bookingsResponse.ok) {
+          const bookingsResult = await bookingsResponse.json()
+          setBookings(bookingsResult.data || [])
+        }
       } catch (error) {
         console.error('Error fetching room data:', error)
+        // If API fails, redirect to rooms page
+        router.push('/rooms')
       } finally {
         setLoading(false)
       }
     }
 
-    if (params.id) {
-      fetchRoomData()
-    }
+    fetchRoomData()
   }, [params.id, router])
 
   const getRoomAvailability = () => {

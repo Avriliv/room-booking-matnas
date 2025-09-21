@@ -62,46 +62,66 @@ export function RoomCard({
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
-      <CardHeader>
+    <Card className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+      <CardHeader className="p-0">
         {/* Room Image */}
-        {room.images && room.images.length > 0 && (
-          <div className="mb-4">
+        {room.images && room.images.length > 0 ? (
+          <div className="relative h-48 overflow-hidden">
             <img
               src={room.images[0]}
               alt={room.name}
-              className="w-full h-32 object-cover rounded-lg"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute top-3 right-3">
+              <Badge 
+                variant="outline"
+                className={`${getAvailabilityColor()} flex items-center gap-1 backdrop-blur-sm bg-white/90`}
+              >
+                {getAvailabilityIcon()}
+                {getAvailabilityText()}
+              </Badge>
+            </div>
+            <div className="absolute bottom-3 right-3">
+              <div 
+                className="w-4 h-4 rounded-full shadow-lg" 
+                style={{ backgroundColor: room.color }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center relative">
+            <Users className="h-16 w-16 text-blue-400" />
+            <div className="absolute top-3 right-3">
+              <Badge 
+                variant="outline"
+                className={`${getAvailabilityColor()} flex items-center gap-1 backdrop-blur-sm bg-white/90`}
+              >
+                {getAvailabilityIcon()}
+                {getAvailabilityText()}
+              </Badge>
+            </div>
           </div>
         )}
         
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: room.color }}
-              />
-              {room.name}
-            </CardTitle>
-            <CardDescription className="mt-1 flex items-center gap-4 text-sm">
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {room.location}
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                {room.capacity} מקומות
-              </span>
-            </CardDescription>
+        <div className="p-4">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1">
+              <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
+                {room.name}
+              </CardTitle>
+              <CardDescription className="flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {room.location}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  {room.capacity} מקומות
+                </span>
+              </CardDescription>
+            </div>
           </div>
-          <Badge 
-            variant="outline"
-            className={`${getAvailabilityColor()} flex items-center gap-1`}
-          >
-            {getAvailabilityIcon()}
-            {getAvailabilityText()}
-          </Badge>
         </div>
       </CardHeader>
       

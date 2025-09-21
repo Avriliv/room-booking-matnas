@@ -69,68 +69,122 @@ export default function AdminReportsPage() {
 
   const fetchReportData = async () => {
     try {
-      // Mock data for demo purposes
-      const mockReportData: ReportData = {
-        totalBookings: 45,
-        totalUsers: 5,
-        totalRooms: 3,
-        averageBookingsPerDay: 1.5,
-        mostPopularRoom: 'חדר ישיבות מנהלים',
-        peakHours: ['09:00-10:00', '14:00-15:00', '16:00-17:00'],
-        bookingStatusBreakdown: {
-          approved: 35,
-          pending: 5,
-          rejected: 3,
-          cancelled: 2
-        },
-        roomUsage: [
-          {
-            roomName: 'חדר ישיבות מנהלים',
-            bookingCount: 20,
-            totalHours: 60
-          },
-          {
-            roomName: 'חדר עבודה שקט',
-            bookingCount: 15,
-            totalHours: 30
-          },
-          {
-            roomName: 'חדר אירועים',
-            bookingCount: 10,
-            totalHours: 40
-          }
-        ],
-        recentBookings: [
-          {
-            id: '1',
-            title: 'ישיבת צוות שבועית',
-            roomName: 'חדר ישיבות מנהלים',
-            userName: 'יוסי כהן',
-            startTime: new Date().toISOString(),
-            status: 'approved'
-          },
-          {
-            id: '2',
-            title: 'עבודה שקטה',
-            roomName: 'חדר עבודה שקט',
-            userName: 'שרה לוי',
-            startTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-            status: 'pending'
-          },
-          {
-            id: '3',
-            title: 'אירוע חברתי',
-            roomName: 'חדר אירועים',
-            userName: 'מיכאל רוזן',
-            startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            status: 'approved'
-          }
-        ]
+      // Fetch real data from APIs
+      const [bookingsResponse, usersResponse, roomsResponse] = await Promise.all([
+        fetch('/api/bookings'),
+        fetch('/api/users'),
+        fetch('/api/rooms')
+      ])
+      
+      const bookings = bookingsResponse.ok ? (await bookingsResponse.json()).data || [] : []
+      const users = usersResponse.ok ? (await usersResponse.json()).data || [] : []
+      const rooms = roomsResponse.ok ? (await roomsResponse.json()).data || [] : []
+      
+      // Calculate report data
+      const totalBookings = bookings.length
+      const totalUsers = users.length
+      const totalRooms = rooms.length
+      const averageBookingsPerDay = totalBookings / parseInt(dateRange)
+      
+      // Find most popular room
+      const roomBookingCounts = rooms.map((room: any) => ({
+        name: room.name,
+        count: bookings.filter((b: any) => b.room_id === room.id).length
+      }))
+      const mostPopularRoom = roomBookingCounts.reduce((max: any, current: any) => 
+        current.count > max.count ? current : max, roomBookingCounts[0] || { name: 'אין נתונים', count: 0 }
+      ).name
+      
+      // Calculate peak hours
+      const hourCounts: { [key: string]: number } = {}
+      bookings.forEach((booking: any) => {
+        const hour = new Date(booking.start_time).getHours()
+        const hourKey = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`
+        hourCounts[hourKey] = (hourCounts[hourKey] || 0) + 1
+      })
+      const peakHours = Object.entries(hourCounts)
+        .sort(([,a], [,b]) => (b as number) - (a as number))
+        .slice(0, 3)
+        .map(([hour]) => hour)
+      
+      // Booking status breakdown
+      const statusCounts = bookings.reduce((acc: any, booking: any) => {
+        acc[booking.status] = (acc[booking.status] || 0) + 1
+        return acc
+      }, {} as { [key: string]: number })
+      
+      const bookingStatusBreakdown = {
+        approved: statusCounts.approved || 0,
+        pending: statusCounts.pending || 0,
+        rejected: statusCounts.rejected || 0,
+        cancelled: statusCounts.cancelled || 0
       }
-
-      setReportData(mockReportData)
+      
+      // Room usage
+      const roomUsage = rooms.map((room: any) => {
+        const roomBookings = bookings.filter((b: any) => b.room_id === room.id)
+        const totalHours = roomBookings.reduce((total: number, booking: any) => {
+          const start = new Date(booking.start_time)
+          const end = new Date(booking.end_time)
+          return total + (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+        }, 0)
+        
+        return {
+          roomName: room.name,
+          bookingCount: roomBookings.length,
+          totalHours: Math.round(totalHours)
+        }
+      }).sort((a: any, b: any) => b.bookingCount - a.bookingCount)
+      
+      // Recent bookings
+      const recentBookings = bookings
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 10)
+        .map((booking: any) => {
+          const room = rooms.find((r: any) => r.id === booking.room_id)
+          const user = users.find((u: any) => u.id === booking.user_id)
+          return {
+            id: booking.id,
+            title: booking.title,
+            roomName: room?.name || 'חדר לא ידוע',
+            userName: user?.display_name || 'משתמש לא ידוע',
+            startTime: booking.start_time,
+            status: booking.status
+          }
+        })
+      
+      const reportData: ReportData = {
+        totalBookings,
+        totalUsers,
+        totalRooms,
+        averageBookingsPerDay: Math.round(averageBookingsPerDay * 10) / 10,
+        mostPopularRoom,
+        peakHours,
+        bookingStatusBreakdown,
+        roomUsage,
+        recentBookings
+      }
+      
+      setReportData(reportData)
     } catch (error) {
       console.error('Error fetching report data:', error)
+      // Set empty data if API fails
+      setReportData({
+        totalBookings: 0,
+        totalUsers: 0,
+        totalRooms: 0,
+        averageBookingsPerDay: 0,
+        mostPopularRoom: 'אין נתונים',
+        peakHours: [],
+        bookingStatusBreakdown: {
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+          cancelled: 0
+        },
+        roomUsage: [],
+        recentBookings: []
+      })
     } finally {
       setLoading(false)
     }

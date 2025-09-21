@@ -18,15 +18,24 @@ export function MainLayout({ children }: MainLayoutProps) {
     )
   }
 
-  // זמנית - משתמש דמה עד שהאימות יעבוד
-  const currentUser = user || {
-    id: 'mock-user',
-    email: 'demo@example.com',
-    display_name: 'משתמש דמה',
-    role: 'admin' as const,
-    active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+  // Use the actual authenticated user
+  const currentUser = user
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">נדרשת התחברות</h1>
+          <p className="text-gray-600 mb-6">אנא התחבר למערכת כדי להמשיך</p>
+          <a 
+            href="/auth/login" 
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            התחבר
+          </a>
+        </div>
+      </div>
+    )
   }
 
   return (

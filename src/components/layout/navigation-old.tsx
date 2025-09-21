@@ -29,9 +29,9 @@ import {
 import { cn } from '@/lib/utils'
 
 export function Navigation() {
-  const { user, signOut } = useAuth()
-  const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
+  const { user, signOut } = useAuth()
 
   const handleSignOut = async () => {
     await signOut()
@@ -43,29 +43,23 @@ export function Navigation() {
       { name: 'דשבורד', href: '/dashboard', icon: Home, roles: ['admin', 'editor', 'user'] },
       { name: 'לוח שנה', href: '/calendar', icon: Calendar, roles: ['admin', 'editor', 'user'] },
       { name: 'חללים', href: '/rooms', icon: Building2, roles: ['admin', 'editor', 'user'] },
-      { name: 'הזמנות שלי', href: '/my-bookings', icon: Clock, roles: ['admin', 'editor', 'user'] },
-      { name: 'פרופיל', href: '/profile', icon: User, roles: ['admin', 'editor', 'user'] }
+      { name: 'הזמנות שלי', href: '/my-bookings', icon: User, roles: ['admin', 'editor', 'user'] },
     ]
 
     const adminItems = [
-      { name: 'ניהול משתמשים', href: '/admin/users', icon: User, roles: ['admin'] },
       { name: 'ניהול חללים', href: '/admin/rooms', icon: Building2, roles: ['admin'] },
       { name: 'ניהול הזמנות', href: '/admin/bookings', icon: Calendar, roles: ['admin'] },
-      { name: 'אישורים', href: '/admin/approvals', icon: Shield, roles: ['admin'] },
-      { name: 'דוחות', href: '/admin/reports', icon: TrendingUp, roles: ['admin'] },
-      { name: 'הגדרות', href: '/admin/settings', icon: Settings, roles: ['admin'] }
+      { name: 'ניהול משתמשים', href: '/admin/users', icon: User, roles: ['admin'] },
+      { name: 'ניהול תפקידים', href: '/admin/roles', icon: Shield, roles: ['admin'] },
+      { name: 'תור אישורים', href: '/admin/approvals', icon: Clock, roles: ['admin', 'editor'] },
+      { name: 'דוחות', href: '/admin/reports', icon: TrendingUp, roles: ['admin', 'editor'] },
+      { name: 'הגדרות', href: '/admin/settings', icon: Settings, roles: ['admin'] },
     ]
 
-    const editorItems = [
-      { name: 'ניהול חללים', href: '/admin/rooms', icon: Building2, roles: ['editor'] },
-      { name: 'ניהול הזמנות', href: '/admin/bookings', icon: Calendar, roles: ['editor'] },
-      { name: 'אישורים', href: '/admin/approvals', icon: Shield, roles: ['editor'] }
-    ]
-
-    const allItems = [...baseItems, ...adminItems, ...editorItems]
-
+    const allItems = [...baseItems, ...adminItems]
+    
     if (!user) return baseItems
-
+    
     return allItems.filter(item => 
       item.roles.includes(user.role as 'admin' | 'editor' | 'user')
     )
@@ -169,35 +163,41 @@ export function Navigation() {
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user?.display_name}</p>
-                    <p className="w-[200px] truncate text-sm text-muted-foreground">
-                      {user?.email}
-                    </p>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{user?.display_name}</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {user?.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user?.job_title}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center">
-                    <User className="ml-2 h-4 w-4" />
-                    פרופיל
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="flex items-center">
-                    <Settings className="ml-2 h-4 w-4" />
-                    הגדרות
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-                  <LogOut className="ml-2 h-4 w-4" />
-                  התנתק
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <User className="ml-2 h-4 w-4" />
+                      <span>פרופיל</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  {user?.role === 'admin' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center">
+                        <Shield className="ml-2 h-4 w-4" />
+                        <span>ניהול מערכת</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                    <LogOut className="ml-2 h-4 w-4" />
+                    <span>התנתק</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <div className="mr-2 flex items-center sm:hidden">
               <Button
                 variant="ghost"
