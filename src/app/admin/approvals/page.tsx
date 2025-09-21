@@ -55,67 +55,6 @@ export default function AdminApprovalsPage() {
     }
   }
 
-            color: '#3B82F6',
-            cancellation_hours: 4,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          user: {
-            id: 'user-4',
-            display_name: 'רחל גולדברג',
-            email: 'rachel@example.com',
-            role: 'user',
-            active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        },
-        {
-          id: '5',
-          room_id: '3',
-          user_id: 'user-5',
-          title: 'אירוע חברתי',
-          description: 'אירוע חברתי לצוות המחלקה',
-          start_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week from now
-          end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(), // 1 week from now + 4 hours
-          attendee_count: 30,
-          attendees: ['team1@example.com', 'team2@example.com'],
-          status: 'pending',
-          requires_approval_snapshot: true,
-          is_recurring: false,
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-          updated_at: new Date().toISOString(),
-          room: {
-            id: '3',
-            name: 'חדר אירועים',
-            description: 'חדר גדול לאירועים',
-            capacity: 50,
-            location: 'קומה 1, אולם מרכזי',
-            equipment: ['מערכת הגברה', 'תאורה'],
-            tags: ['אירועים', 'הרצאות'],
-            photo_urls: [],
-            requires_approval: true,
-            bookable: true,
-            time_slot_minutes: 60,
-            min_duration_minutes: 120,
-            max_duration_minutes: 480,
-            color: '#F59E0B',
-            cancellation_hours: 24,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          user: {
-            id: 'user-5',
-            display_name: 'מיכאל רוזן',
-            email: 'michael@example.com',
-            role: 'editor',
-            active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        }
-      ]
-
 
   const handleApprove = async (bookingId: string) => {
     try {
