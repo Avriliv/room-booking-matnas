@@ -31,6 +31,20 @@ export default function RootLayout({
     <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
         {/* Service Worker removed for better performance */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Clean up any existing service workers
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                    registration.unregister();
+                  }
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body
         className={`${inter.variable} ${heebo.variable} antialiased`}
