@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Heebo } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import RouteLogger from "./route-logger";
 
 export const dynamic = 'force-dynamic'
 
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${heebo.variable} antialiased`}
       >
+        <RouteLogger />
         {children}
         <Toaster />
       </body>

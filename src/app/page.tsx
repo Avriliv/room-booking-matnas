@@ -11,23 +11,23 @@ import Link from 'next/link'
 export default function Home() {
   const router = useRouter()
   const { user, loading } = useAuth()
-  const [mounted, setMounted] = useState(false)
   
+  // If user is authenticated, redirect to dashboard (with timeout protection)
   useEffect(() => {
-    setMounted(true)
-  }, [])
-  
-  // If user is authenticated, redirect to dashboard
-  useEffect(() => {
-    if (mounted && user && !loading) {
-      router.push('/dashboard')
+    if (user && !loading) {
+      console.log('[HOME] Redirecting authenticated user to dashboard')
+      const timeoutId = setTimeout(() => {
+        router.push('/dashboard')
+      }, 100) // Small delay to prevent race conditions
+      
+      return () => clearTimeout(timeoutId)
     }
-  }, [mounted, user, loading, router])
+  }, [user, loading, router])
   
-  if (!mounted || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     )
   }
@@ -35,7 +35,7 @@ export default function Home() {
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     )
   }

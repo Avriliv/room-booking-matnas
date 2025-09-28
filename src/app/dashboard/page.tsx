@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { AdminOnly, EditorOrAdmin } from '@/components/auth/permission-guard'
 import { Loading, CardSkeleton, RoomCardSkeleton } from '@/components/ui/loading'
 import { ErrorMessage, EmptyState } from '@/components/ui/error'
+import { withFetchTimeout } from '@/lib/withTimeout'
 
 export default function Dashboard() {
   const [rooms, setRooms] = useState<Room[]>([])
@@ -60,41 +61,46 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setError(null)
+        console.log('[DASHBOARD] Fetching data...')
         
-        // Fetch real data from API with shorter timeout
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
-        
+        // Fetch real data from API with timeout wrapper
         const [roomsResponse, bookingsResponse] = await Promise.all([
-          fetch('/api/rooms?active=true', { signal: controller.signal }),
-          fetch('/api/bookings', { signal: controller.signal })
+          withFetchTimeout(
+            fetch('/api/rooms?active=true', { cache: 'no-store' }),
+            5000
+          ),
+          withFetchTimeout(
+            fetch('/api/bookings', { cache: 'no-store' }),
+            5000
+          )
         ])
-        
-        clearTimeout(timeoutId)
         
         if (!isMounted) return
         
         if (roomsResponse.ok) {
           const roomsResult = await roomsResponse.json()
           setRooms(roomsResult.data || [])
+          console.log('[DASHBOARD] Rooms loaded:', roomsResult.data?.length || 0)
         }
         
         if (bookingsResponse.ok) {
           const bookingsResult = await bookingsResponse.json()
           setBookings(bookingsResult.data || [])
+          console.log('[DASHBOARD] Bookings loaded:', bookingsResult.data?.length || 0)
         }
       } catch (error) {
         if (!isMounted) return
         
-        if (error instanceof Error && error.name === 'AbortError') {
+        console.error('[DASHBOARD] Error fetching data:', error)
+        if (error instanceof Error && error.message.includes('timed out')) {
           setError('הטעינה ארכה יותר מדי זמן. אנא נסה שוב.')
         } else {
-        console.error('Error fetching data:', error)
-        setError('שגיאה בטעינת הנתונים. אנא נסה שוב.')
+          setError('שגיאה בטעינת הנתונים. אנא נסה שוב.')
         }
       } finally {
         if (isMounted) {
-        setLoading(false)
+          setLoading(false)
+          console.log('[DASHBOARD] Data loading completed')
         }
       }
     }
