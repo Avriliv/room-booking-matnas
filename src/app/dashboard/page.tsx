@@ -200,105 +200,133 @@ export default function Dashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">חללים זמינים</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{roomStats.totalRooms}</div>
-              <p className="text-xs text-muted-foreground">
-                חללי עבודה פעילים
-              </p>
-            </CardContent>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+              <Link href="/rooms">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 w-full">
+                  <CardTitle className="text-sm font-medium">חללים זמינים</CardTitle>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{roomStats.totalRooms}</div>
+                  <p className="text-xs text-muted-foreground">
+                    חללי עבודה פעילים
+                  </p>
+                </CardContent>
+              </Link>
+            </Button>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">הזמנות היום</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{bookings.length}</div>
-              <p className="text-xs text-muted-foreground">
-                הזמנות מאושרות
-              </p>
-            </CardContent>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+              <Link href="/calendar">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 w-full">
+                  <CardTitle className="text-sm font-medium">הזמנות היום</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{bookings.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    הזמנות מאושרות
+                  </p>
+                </CardContent>
+              </Link>
+            </Button>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">חללים תפוסים</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{roomStats.busyRooms}</div>
-              <p className="text-xs text-muted-foreground">
-                כרגע בשימוש
-              </p>
-            </CardContent>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+              <Link href="/my-bookings">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 w-full">
+                  <CardTitle className="text-sm font-medium">חללים תפוסים</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{roomStats.busyRooms}</div>
+                  <p className="text-xs text-muted-foreground">
+                    כרגע בשימוש
+                  </p>
+                </CardContent>
+              </Link>
+            </Button>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">זמינות</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{roomStats.availabilityPercentage}%</div>
-              <p className="text-xs text-muted-foreground">
-                אחוז זמינות
-              </p>
-            </CardContent>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+              <Link href="/calendar">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 w-full">
+                  <CardTitle className="text-sm font-medium">זמינות</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{roomStats.availabilityPercentage}%</div>
+                  <p className="text-xs text-muted-foreground">
+                    אחוז זמינות
+                  </p>
+                </CardContent>
+              </Link>
+            </Button>
           </Card>
         </div>
 
         {/* Admin/Editor Stats */}
         <EditorOrAdmin>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">הזמנות ממתינות</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {bookings.filter(b => b.status === 'pending').length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  דורשות אישור
-                </p>
-              </CardContent>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+                <Link href="/admin/approvals">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 w-full">
+                    <CardTitle className="text-sm font-medium">הזמנות ממתינות</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {bookings.filter(b => b.status === 'pending').length}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      דורשות אישור
+                    </p>
+                  </CardContent>
+                </Link>
+              </Button>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">משתמשים פעילים</CardTitle>
-                <UserCheck className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {user?.role === 'admin' ? '12' : '-'}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  משתמשים במערכת
-                </p>
-              </CardContent>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+                <Link href="/admin/users">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 w-full">
+                    <CardTitle className="text-sm font-medium">משתמשים פעילים</CardTitle>
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      {user?.role === 'admin' ? '12' : '-'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      משתמשים במערכת
+                    </p>
+                  </CardContent>
+                </Link>
+              </Button>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">שימוש השבוע</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  {bookings.length * 2}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  הזמנות השבוע
-                </p>
-              </CardContent>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+                <Link href="/admin/reports">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 w-full">
+                    <CardTitle className="text-sm font-medium">שימוש השבוע</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {bookings.length * 2}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      הזמנות השבוע
+                    </p>
+                  </CardContent>
+                </Link>
+              </Button>
             </Card>
           </div>
         </EditorOrAdmin>
@@ -420,45 +448,57 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold mb-4">פעולות מהירות</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Building2 className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">ניהול חללים</h3>
-                      <p className="text-sm text-gray-600">הוסף וערוך חללי עבודה</p>
-                    </div>
-                  </div>
-                </CardContent>
+                <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+                  <Link href="/admin/rooms">
+                    <CardContent className="p-6 w-full">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Building2 className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">ניהול חללים</h3>
+                          <p className="text-sm text-gray-600">הוסף וערוך חללי עבודה</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Button>
               </Card>
 
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Users className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">ניהול משתמשים</h3>
-                      <p className="text-sm text-gray-600">הוסף וערוך משתמשים</p>
-                    </div>
-                  </div>
-                </CardContent>
+                <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+                  <Link href="/admin/users">
+                    <CardContent className="p-6 w-full">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Users className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">ניהול משתמשים</h3>
+                          <p className="text-sm text-gray-600">הוסף וערוך משתמשים</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Button>
               </Card>
 
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <Shield className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">הגדרות מערכת</h3>
-                      <p className="text-sm text-gray-600">נהל הגדרות כלליות</p>
-                    </div>
-                  </div>
-                </CardContent>
+                <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+                  <Link href="/admin/settings">
+                    <CardContent className="p-6 w-full">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Shield className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">הגדרות מערכת</h3>
+                          <p className="text-sm text-gray-600">נהל הגדרות כלליות</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Button>
               </Card>
             </div>
           </div>
@@ -467,29 +507,41 @@ export default function Dashboard() {
         {/* Today's Bookings */}
         {bookings.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">הזמנות היום</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">הזמנות היום</h2>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/calendar">
+                  <Calendar className="ml-2 h-4 w-4" />
+                  צפה בלוח שנה
+                </Link>
+              </Button>
+            </div>
             <div className="space-y-2">
               {bookings.map((booking) => (
-                <Card key={booking.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium">{booking.title}</h3>
-                        <p className="text-sm text-gray-600">
-                          {booking.room?.name} • {booking.user?.display_name}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
-                          {format(new Date(booking.start_time), 'HH:mm', { locale: he })} - 
-                          {format(new Date(booking.end_time), 'HH:mm', { locale: he })}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {booking.attendee_count} משתתפים
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
+                <Card key={booking.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Button asChild variant="ghost" className="h-auto p-0 w-full justify-start">
+                    <Link href={`/rooms/${booking.room_id}`}>
+                      <CardContent className="p-4 w-full">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium">{booking.title}</h3>
+                            <p className="text-sm text-gray-600">
+                              {booking.room?.name} • {booking.user?.display_name}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium">
+                              {format(new Date(booking.start_time), 'HH:mm', { locale: he })} - 
+                              {format(new Date(booking.end_time), 'HH:mm', { locale: he })}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {booking.attendee_count} משתתפים
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Link>
+                  </Button>
                 </Card>
               ))}
             </div>
