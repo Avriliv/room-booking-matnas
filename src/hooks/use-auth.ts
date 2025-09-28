@@ -10,6 +10,8 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     const getUser = async () => {
       try {
         console.log('[AUTH] Getting user...')
@@ -18,6 +20,8 @@ export function useAuth() {
           5000
         )
         
+        if (!isMounted) return
+
         if (authUser) {
           console.log('[AUTH] User found, fetching profile...')
           // Fetch user profile with timeout
@@ -32,6 +36,8 @@ export function useAuth() {
             5000
           )
           
+          if (!isMounted) return
+
           const { data: profile, error } = profileResult as any
 
           if (error) {
@@ -47,9 +53,13 @@ export function useAuth() {
         }
       } catch (error) {
         console.error('Error getting user:', error)
-        setUser(null)
+        if (isMounted) {
+          setUser(null)
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
@@ -58,7 +68,10 @@ export function useAuth() {
     // Listen for auth changes with timeout
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[AUTH] Auth state changed:', event)
+        console.log('[AUTH] Auth state changed:', event, session?.user?.id)
+        
+        if (!isMounted) return
+
         try {
           if (session?.user) {
             const profileQuery = supabase
@@ -72,27 +85,38 @@ export function useAuth() {
               5000
             )
             
+            if (!isMounted) return
+
             const { data: profile, error } = profileResult as any
 
             if (error) {
               console.error('Error fetching profile:', error)
               setUser(null)
             } else {
+              console.log('[AUTH] Profile updated from auth change')
               setUser(profile)
             }
           } else {
+            console.log('[AUTH] User signed out')
             setUser(null)
           }
         } catch (error) {
           console.error('Error in auth state change:', error)
-          setUser(null)
+          if (isMounted) {
+            setUser(null)
+          }
         } finally {
-          setLoading(false)
+          if (isMounted) {
+            setLoading(false)
+          }
         }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signOut = async () => {
