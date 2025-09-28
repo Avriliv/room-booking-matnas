@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 export default function AuthDebug() {
   const [sessionInfo, setSessionInfo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -71,25 +72,41 @@ export default function AuthDebug() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Only show in development
+  if (process.env.NODE_ENV !== 'development') {
+    return null
+  }
+
   if (loading) {
-    return <div>Loading auth debug...</div>
+    return (
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        className="fixed top-4 right-4 z-50 bg-red-500 text-white px-2 py-1 text-xs rounded"
+      >
+        {isVisible ? 'Hide Debug' : 'Show Debug'}
+      </button>
+    )
   }
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 10, 
-      right: 10, 
-      background: 'white', 
-      border: '1px solid #ccc', 
-      padding: '10px', 
-      borderRadius: '5px',
-      fontSize: '12px',
-      maxWidth: '300px',
-      zIndex: 9999
-    }}>
-      <h4>Auth Debug</h4>
-      <pre>{JSON.stringify(sessionInfo, null, 2)}</pre>
-    </div>
+    <>
+      {/* Toggle button */}
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        className="fixed top-4 right-4 z-50 bg-red-500 text-white px-2 py-1 text-xs rounded"
+      >
+        {isVisible ? 'Hide Debug' : 'Show Debug'}
+      </button>
+
+      {/* Debug box */}
+      {isVisible && sessionInfo && (
+        <div className="fixed top-12 right-4 z-50 bg-white border border-gray-300 rounded-lg p-4 shadow-lg max-w-sm">
+          <h3 className="font-bold text-sm mb-2">Auth Debug</h3>
+          <pre className="text-xs overflow-auto max-h-64">
+            {JSON.stringify(sessionInfo, null, 2)}
+          </pre>
+        </div>
+      )}
+    </>
   )
 }
