@@ -21,6 +21,9 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Ensure images is always an array
+  const safeImages = images || []
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files) return
@@ -45,7 +48,7 @@ export function ImageUpload({
 
     if (validFiles.length === 0) return
 
-    if (images.length + validFiles.length > maxImages) {
+    if (safeImages.length + validFiles.length > maxImages) {
       toast.error(`ניתן להעלות מקסימום ${maxImages} תמונות`)
       return
     }
@@ -73,7 +76,7 @@ export function ImageUpload({
       })
 
       const uploadedUrls = await Promise.all(uploadPromises)
-      onImagesChange([...images, ...uploadedUrls])
+      onImagesChange([...safeImages, ...uploadedUrls])
       toast.success(`${uploadedUrls.length} תמונות הועלו בהצלחה`)
     } catch (error) {
       console.error('Error uploading images:', error)
@@ -84,7 +87,7 @@ export function ImageUpload({
   }
 
   const removeImage = async (index: number) => {
-    const imageToRemove = images[index]
+    const imageToRemove = safeImages[index]
     
     try {
       // Extract path from URL for deletion
@@ -98,7 +101,7 @@ export function ImageUpload({
       console.error('Error deleting image:', error)
     }
 
-    onImagesChange(images.filter((_, i) => i !== index))
+    onImagesChange(safeImages.filter((_, i) => i !== index))
   }
 
   return (
@@ -106,7 +109,7 @@ export function ImageUpload({
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">תמונות</label>
         <span className="text-xs text-gray-500">
-          {images.length}/{maxImages}
+          {safeImages.length}/{maxImages}
         </span>
       </div>
 
@@ -136,9 +139,9 @@ export function ImageUpload({
       />
 
       {/* Image Preview */}
-      {images.length > 0 && (
+      {safeImages.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {images.map((image, index) => (
+          {safeImages.map((image, index) => (
             <div key={index} className="relative group">
               <img
                 src={image}
@@ -159,7 +162,7 @@ export function ImageUpload({
         </div>
       )}
 
-      {images.length === 0 && (
+      {safeImages.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <ImageIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
           <p className="text-sm">אין תמונות</p>
