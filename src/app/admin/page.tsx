@@ -41,54 +41,34 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch users count
-        const { count: totalUsers } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
+        // Use API routes for better performance and admin access
+        const [usersResponse, roomsResponse, bookingsResponse, recentBookingsResponse] = await Promise.all([
+          fetch('/api/users'),
+          fetch('/api/rooms'),
+          fetch('/api/bookings'),
+          fetch('/api/bookings?limit=5')
+        ])
 
-        const { count: activeUsers } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('active', true)
+        const usersData = await usersResponse.json()
+        const roomsData = await roomsResponse.json()
+        const bookingsData = await bookingsResponse.json()
+        const recentBookingsData = await recentBookingsResponse.json()
 
-        // Fetch rooms count
-        const { count: totalRooms } = await supabase
-          .from('rooms')
-          .select('*', { count: 'exact', head: true })
+        const totalUsers = usersData.data?.length || 0
+        const activeUsers = usersData.data?.filter((u: any) => u.active)?.length || 0
+        const totalRooms = roomsData.data?.length || 0
+        const totalBookings = bookingsData.data?.length || 0
+        const pendingApprovals = bookingsData.data?.filter((b: any) => b.status === 'pending')?.length || 0
 
-        // Fetch bookings count
-        const { count: totalBookings } = await supabase
-          .from('bookings')
-          .select('*', { count: 'exact', head: true })
-
-        // Fetch pending approvals
-        const { count: pendingApprovals } = await supabase
-          .from('bookings')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending')
-
-        // Fetch today's bookings
+        // Calculate today's bookings
         const today = new Date()
         const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
         const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
-
-        const { count: todayBookings } = await supabase
-          .from('bookings')
-          .select('*', { count: 'exact', head: true })
-          .gte('start_time', startOfDay.toISOString())
-          .lt('start_time', endOfDay.toISOString())
-          .eq('status', 'approved')
-
-        // Fetch recent bookings
-        const { data: recentBookingsData } = await supabase
-          .from('bookings')
-          .select(`
-            *,
-            room:rooms(*),
-            user:profiles(*)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5)
+        
+        const todayBookings = bookingsData.data?.filter((b: any) => {
+          const bookingDate = new Date(b.start_time)
+          return bookingDate >= startOfDay && bookingDate < endOfDay && b.status === 'approved'
+        })?.length || 0
 
         setStats({
           totalUsers: totalUsers || 0,

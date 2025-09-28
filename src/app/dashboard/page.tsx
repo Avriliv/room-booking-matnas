@@ -55,19 +55,15 @@ export default function Dashboard() {
   }, [rooms, getRoomAvailability])
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
     let isMounted = true
     
     const fetchData = async () => {
       try {
         setError(null)
         
-        // Fetch real data from API with timeout
+        // Fetch real data from API with shorter timeout
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
         
         const [roomsResponse, bookingsResponse] = await Promise.all([
           fetch('/api/rooms?active=true', { signal: controller.signal }),
@@ -110,24 +106,6 @@ export default function Dashboard() {
     }
   }, [])
 
-  if (!mounted) {
-    return (
-      <MainLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">דשבורד</h1>
-              <p className="text-gray-600">טוען...</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        </div>
-      </MainLayout>
-    )
-  }
 
   if (loading) {
     return (

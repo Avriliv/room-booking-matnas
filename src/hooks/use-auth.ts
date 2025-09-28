@@ -7,15 +7,8 @@ import { Profile } from '@/types'
 export function useAuth() {
   const [user, setUser] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
     const getUser = async () => {
       try {
         const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -71,7 +64,7 @@ export function useAuth() {
     )
 
     return () => subscription.unsubscribe()
-  }, [mounted])
+  }, [])
 
   const signOut = async () => {
     await supabase.auth.signOut()
@@ -79,8 +72,8 @@ export function useAuth() {
   }
 
   return {
-    user: mounted ? user : null,
-    loading: mounted ? loading : true,
+    user,
+    loading,
     signOut
   }
 }

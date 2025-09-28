@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const roomId = searchParams.get('roomId')
     const status = searchParams.get('status')
 
+    // Build optimized query with proper joins
     let query = supabaseAdmin
       .from('bookings')
       .select(`
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
         user:profiles!bookings_user_id_fkey(*)
       `)
       .order('created_at', { ascending: false })
+      .limit(100) // Limit results for better performance
 
     if (userId) {
       query = query.eq('user_id', userId)
@@ -126,16 +128,13 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to admins if booking requires approval
     if (status === 'pending') {
-      console.log('📧 Would send email notification for pending booking:', data.id)
-      // Email notifications temporarily disabled for debugging
-      /*
+      console.log('📧 Sending email notification for pending booking:', data.id)
       try {
         await notifyAdminNewBooking(data)
       } catch (emailError) {
         console.error('Error sending email notification:', emailError)
         // Don't fail the booking creation if email fails
       }
-      */
     }
 
     return NextResponse.json({

@@ -39,6 +39,10 @@ export async function sendEmailNotification(notification: EmailNotification) {
     //   }),
     // })
     
+    // For now, simulate successful email sending
+    console.log(`✅ Email would be sent to: ${notification.to}`)
+    console.log(`📧 Subject: ${notification.subject}`)
+    
     return { success: true }
   } catch (error) {
     console.error('Error sending email notification:', error)
