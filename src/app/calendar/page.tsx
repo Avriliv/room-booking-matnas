@@ -2,11 +2,11 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState, useTransition } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { useAuth } from '@/hooks/use-auth'
-import { MainLayout } from '@/components/layout/main-layout'
+import { Navigation } from '@/components/layout/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -31,6 +31,8 @@ import { toast } from 'sonner'
 
 export default function CalendarPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const { user } = useAuth()
   const [rooms, setRooms] = useState<Room[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -125,6 +127,13 @@ export default function CalendarPage() {
     setCurrentDate(new Date())
   }
 
+  // Fast navigation function
+  const navigateTo = (path: string) => {
+    startTransition(() => {
+      router.push(path)
+    })
+  }
+
   const handleDateClick = (date: Date) => {
     setSelectedDate(date)
     setShowBookingDialog(true)
@@ -156,16 +165,21 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        </div>
-      </MainLayout>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        </main>
+      </div>
     )
   }
 
   return (
-    <MainLayout>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -326,6 +340,7 @@ export default function CalendarPage() {
           }}
         />
       </div>
-    </MainLayout>
+      </main>
+    </div>
   )
 }

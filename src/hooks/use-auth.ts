@@ -8,6 +8,9 @@ import { withSupabaseTimeout } from '@/lib/withTimeout'
 export function useAuth() {
   const [user, setUser] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Cache for faster subsequent loads
+  const [initialLoad, setInitialLoad] = useState(true)
 
   useEffect(() => {
     let isMounted = true
@@ -15,9 +18,43 @@ export function useAuth() {
     const getUser = async () => {
       try {
         console.log('[AUTH] Getting user...')
+        
+        // Try to get session first (faster)
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          console.log('[AUTH] Session found, using cached user')
+          if (!isMounted) return
+          
+          // Fetch profile with shorter timeout for cached session
+          const profileQuery = supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+          
+          const profileResult = await withSupabaseTimeout(
+            Promise.resolve(profileQuery),
+            2000 // Shorter timeout for cached session
+          )
+          
+          if (!isMounted) return
+          const { data: profile, error } = profileResult as any
+          
+          if (error) {
+            console.error('Error fetching profile:', error)
+            setUser(null)
+          } else {
+            console.log('[AUTH] Profile loaded from session')
+            setUser(profile)
+          }
+          return
+        }
+        
+        // Fallback to getUser if no session
         const { data: { user: authUser } } = await withSupabaseTimeout(
           supabase.auth.getUser(),
-          5000
+          3000 // Shorter timeout
         )
         
         if (!isMounted) return
@@ -108,6 +145,7 @@ export function useAuth() {
         } finally {
           if (isMounted) {
             setLoading(false)
+            setInitialLoad(false)
           }
         }
       }

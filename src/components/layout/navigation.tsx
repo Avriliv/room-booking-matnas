@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { 
@@ -31,10 +31,19 @@ import { cn } from '@/lib/utils'
 export function Navigation() {
   const { user, signOut } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
+  }
+
+  // Fast navigation function
+  const navigateTo = (href: string) => {
+    startTransition(() => {
+      router.push(href)
+    })
   }
 
   // Navigation items based on user role
@@ -116,9 +125,9 @@ export function Navigation() {
               {navigation.filter(item => !item.roles.includes('admin') || item.roles.includes('user')).map((item) => {
                 const Icon = item.icon
                 return (
-                  <Link
+                  <button
                     key={item.name}
-                    href={item.href}
+                    onClick={() => navigateTo(item.href)}
                     className={cn(
                       'inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
                       pathname === item.href
@@ -128,7 +137,7 @@ export function Navigation() {
                   >
                     <Icon className="ml-2 h-4 w-4" />
                     {item.name}
-                  </Link>
+                  </button>
                 )
               })}
             </div>
@@ -229,21 +238,23 @@ export function Navigation() {
                   {showSeparator && (
                     <div className="border-t border-gray-200 my-2" />
                   )}
-                  <Link
-                    href={item.href}
+                  <button
+                    onClick={() => {
+                      navigateTo(item.href)
+                      setIsMobileMenuOpen(false)
+                    }}
                     className={cn(
-                      'block pl-3 pr-4 py-2 border-r-4 text-base font-medium',
+                      'block w-full text-right pl-3 pr-4 py-2 border-r-4 text-base font-medium',
                       pathname === item.href
                         ? 'bg-blue-50 border-blue-500 text-blue-700'
                         : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
                     )}
-                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <div className="flex items-center">
                       <Icon className="ml-2 h-4 w-4" />
                       {item.name}
                     </div>
-                  </Link>
+                  </button>
                 </div>
               )
             })}
